@@ -1,33 +1,75 @@
-import { Indicator, type Trace } from "./base-indicator"
-import type { DataPoint } from "../../types/chart-types"
-import type { ConfigurableIndicator, IndicatorParameter } from "./configurable-indicator"
+import { Indicator, type Trace } from "./base-indicator";
+import type { DataPoint } from "../../types/chart-types";
+import type {
+  ConfigurableIndicator,
+  IndicatorParameter,
+} from "./configurable-indicator";
 
 interface RSIResult {
-  values: number[]
+  values: number[];
 }
 
 export class RSIIndicator extends Indicator implements ConfigurableIndicator {
-  static readonly name = "RSI"
+  static readonly indicatorName = "RSI";
   static readonly config = {
     subplot: true,
     height: 0.3,
-  }
+  };
   static readonly defaultParams: IndicatorParameter[] = [
-    { name: "period", type: "number", label: "Period", value: 14, min: 1, max: 100, step: 1 },
-    { name: "overbought", type: "number", label: "Overbought Level", value: 70, min: 50, max: 90, step: 1 },
-    { name: "oversold", type: "number", label: "Oversold Level", value: 30, min: 10, max: 50, step: 1 },
-    { name: "lineColor", type: "string", label: "Line Color", value: "rgb(59, 130, 246)" }, // Blue
-    { name: "overboughtColor", type: "string", label: "Overbought Color", value: "rgb(239, 68, 68)" }, // Red
-    { name: "oversoldColor", type: "string", label: "Oversold Color", value: "rgb(34, 197, 94)" }, // Green
-  ]
+    {
+      name: "period",
+      type: "number",
+      label: "Period",
+      value: 14,
+      min: 1,
+      max: 100,
+      step: 1,
+    },
+    {
+      name: "overbought",
+      type: "number",
+      label: "Overbought Level",
+      value: 70,
+      min: 50,
+      max: 90,
+      step: 1,
+    },
+    {
+      name: "oversold",
+      type: "number",
+      label: "Oversold Level",
+      value: 30,
+      min: 10,
+      max: 50,
+      step: 1,
+    },
+    {
+      name: "lineColor",
+      type: "string",
+      label: "Line Color",
+      value: "rgb(59, 130, 246)",
+    }, // Blue
+    {
+      name: "overboughtColor",
+      type: "string",
+      label: "Overbought Color",
+      value: "rgb(239, 68, 68)",
+    }, // Red
+    {
+      name: "oversoldColor",
+      type: "string",
+      label: "Oversold Color",
+      value: "rgb(34, 197, 94)",
+    }, // Green
+  ];
 
-  private result: RSIResult | null = null
-  private period: number
-  private overbought: number
-  private oversold: number
-  private lineColor: string
-  private overboughtColor: string
-  private oversoldColor: string
+  private result: RSIResult | null = null;
+  private period: number;
+  private overbought: number;
+  private oversold: number;
+  private lineColor: string;
+  private overboughtColor: string;
+  private oversoldColor: string;
 
   constructor(
     data: DataPoint[],
@@ -36,83 +78,87 @@ export class RSIIndicator extends Indicator implements ConfigurableIndicator {
     oversold = 30,
     lineColor = "rgb(59, 130, 246)",
     overboughtColor = "rgb(239, 68, 68)",
-    oversoldColor = "rgb(34, 197, 94)",
+    oversoldColor = "rgb(34, 197, 94)"
   ) {
-    super(data)
-    this.period = period
-    this.overbought = overbought
-    this.oversold = oversold
-    this.lineColor = lineColor
-    this.overboughtColor = overboughtColor
-    this.oversoldColor = oversoldColor
+    super(data);
+    this.period = period;
+    this.overbought = overbought;
+    this.oversold = oversold;
+    this.lineColor = lineColor;
+    this.overboughtColor = overboughtColor;
+    this.oversoldColor = oversoldColor;
   }
 
   getParameters(): IndicatorParameter[] {
-    return RSIIndicator.defaultParams
+    return RSIIndicator.defaultParams;
   }
 
   setParameters(params: Record<string, any>): void {
-    if (params.period) this.period = params.period
-    if (params.overbought) this.overbought = params.overbought
-    if (params.oversold) this.oversold = params.oversold
-    if (params.lineColor) this.lineColor = params.lineColor
-    if (params.overboughtColor) this.overboughtColor = params.overboughtColor
-    if (params.oversoldColor) this.oversoldColor = params.oversoldColor
-    this.calculate()
+    if (params.period) this.period = params.period;
+    if (params.overbought) this.overbought = params.overbought;
+    if (params.oversold) this.oversold = params.oversold;
+    if (params.lineColor) this.lineColor = params.lineColor;
+    if (params.overboughtColor) this.overboughtColor = params.overboughtColor;
+    if (params.oversoldColor) this.oversoldColor = params.oversoldColor;
+    this.calculate();
   }
 
   calculate(): void {
-    const closes = this.data.map((d) => d.close)
-    const gains: number[] = []
-    const losses: number[] = []
-    const rsi: number[] = []
+    const closes = this.data.map((d) => d.close);
+    const gains: number[] = [];
+    const losses: number[] = [];
+    const rsi: number[] = [];
 
     // Calculate price changes
     for (let i = 1; i < closes.length; i++) {
-      const change = closes[i] - closes[i - 1]
-      gains.push(Math.max(0, change))
-      losses.push(Math.max(0, -change))
+      const change = closes[i] - closes[i - 1];
+      gains.push(Math.max(0, change));
+      losses.push(Math.max(0, -change));
     }
 
     // Calculate initial averages
-    let avgGain = gains.slice(0, this.period).reduce((sum, gain) => sum + gain, 0) / this.period
-    let avgLoss = losses.slice(0, this.period).reduce((sum, loss) => sum + loss, 0) / this.period
+    let avgGain =
+      gains.slice(0, this.period).reduce((sum, gain) => sum + gain, 0) /
+      this.period;
+    let avgLoss =
+      losses.slice(0, this.period).reduce((sum, loss) => sum + loss, 0) /
+      this.period;
 
     // Calculate initial RSI
     for (let i = 0; i < this.period; i++) {
-      rsi.push(0)
+      rsi.push(0);
     }
 
     // First RSI value
     if (avgLoss === 0) {
-      rsi.push(100)
+      rsi.push(100);
     } else {
-      const rs = avgGain / avgLoss
-      rsi.push(100 - 100 / (1 + rs))
+      const rs = avgGain / avgLoss;
+      rsi.push(100 - 100 / (1 + rs));
     }
 
     // Calculate subsequent values
     for (let i = this.period; i < gains.length; i++) {
-      avgGain = (avgGain * (this.period - 1) + gains[i]) / this.period
-      avgLoss = (avgLoss * (this.period - 1) + losses[i]) / this.period
+      avgGain = (avgGain * (this.period - 1) + gains[i]) / this.period;
+      avgLoss = (avgLoss * (this.period - 1) + losses[i]) / this.period;
 
       if (avgLoss === 0) {
-        rsi.push(100)
+        rsi.push(100);
       } else {
-        const rs = avgGain / avgLoss
-        rsi.push(100 - 100 / (1 + rs))
+        const rs = avgGain / avgLoss;
+        rsi.push(100 - 100 / (1 + rs));
       }
     }
 
-    this.result = { values: rsi }
+    this.result = { values: rsi };
   }
 
   generateTraces(): Trace[] {
     if (!this.result) {
-      this.calculate()
+      this.calculate();
     }
 
-    const times = this.data.map((d) => d.time)
+    const times = this.data.map((d) => d.time);
 
     return [
       // RSI Line
@@ -156,7 +202,6 @@ export class RSIIndicator extends Indicator implements ConfigurableIndicator {
         yaxis: "y2",
         showlegend: false,
       },
-    ]
+    ];
   }
 }
-
