@@ -1,0 +1,3 @@
+```typescriptreact file="components/drawing/CursorDot.tsx" isDeleted="true"
+...deleted...
+
