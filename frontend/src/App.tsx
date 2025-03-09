@@ -128,35 +128,33 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="flex-1 flex">
-        <DrawingToolbar
+    <div className="flex h-screen">
+      <DrawingToolbar
+        activeTool={activeTool}
+        onToolChange={setActiveTool}
+        onDeleteSelected={() => {
+          // Handle delete
+        }}
+        isDragging={isDragging}
+        hasSelectedShape={hasSelectedShape}
+        showPathWarning={showPathWarning}
+        className="h-full"
+      />
+      <div className="flex-1 relative">
+        <CandlestickChart
+          data={sampleData}
+          orders={sampleOrders}
+          trades={sampleTrades}
+          positions={positions}
+          onCancelOrder={handleCancelOrder}
+          onCancelPosition={handleCancelPosition}
           activeTool={activeTool}
-          onToolChange={setActiveTool}
-          onDeleteSelected={() => {
-            // Handle delete
-          }}
-          isDragging={isDragging}
-          hasSelectedShape={hasSelectedShape}
-          showPathWarning={showPathWarning}
-          className="h-full"
+          onDragStateChange={setIsDragging}
+          onSelectedShapeChange={setHasSelectedShape}
+          onShowPathWarning={setShowPathWarning}
         />
-        <div className="flex-1 relative">
-          <CandlestickChart
-            data={sampleData}
-            orders={sampleOrders}
-            trades={sampleTrades}
-            positions={positions}
-            onCancelOrder={handleCancelOrder}
-            onCancelPosition={handleCancelPosition}
-            activeTool={activeTool}
-            onDragStateChange={setIsDragging}
-            onSelectedShapeChange={setHasSelectedShape}
-            onShowPathWarning={setShowPathWarning}
-          />
-        </div>
       </div>
-      <Watchlist onSymbolSelect={setCurrentSymbol} />
+      <Watchlist onSymbolSelect={setCurrentSymbol} className="p-4" />
     </div>
   );
 }

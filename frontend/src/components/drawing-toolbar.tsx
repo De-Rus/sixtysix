@@ -126,7 +126,6 @@ export function DrawingToolbar({
   hasSelectedShape = false,
   showPathWarning = false,
 }: DrawingToolbarProps) {
-  const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
   const [internalHasSelectedShape, setInternalHasSelectedShape] =
     useState(false);
 
@@ -202,23 +201,8 @@ export function DrawingToolbar({
 
   return (
     <div
-      className={`bg-background border rounded-lg shadow-lg p-2 transition-all duration-300 ${className} ${
-        toolbarCollapsed ? "w-10" : "w-[52px]"
-      }`}
+      className={`bg-background w-[50px] border rounded-lg shadow-lg p-2 transition-all duration-300 ${className} "w-[52px]"`}
     >
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full border bg-background p-0.5"
-        onClick={() => setToolbarCollapsed(!toolbarCollapsed)}
-      >
-        {toolbarCollapsed ? (
-          <ChevronRight size={14} />
-        ) : (
-          <ChevronLeft size={14} />
-        )}
-      </Button>
-
       <div className="space-y-2">
         <TooltipProvider>
           {drawingTools.map((tool) => (
@@ -227,7 +211,7 @@ export function DrawingToolbar({
                 <Button
                   variant={activeTool === tool.mode ? "secondary" : "ghost"}
                   size="icon"
-                  className={`w-full h-8 ${toolbarCollapsed ? "hidden" : ""}`}
+                  className={`w-full h-8`}
                   onClick={() => activateDrawingTool(tool.mode)}
                 >
                   {tool.icon}
@@ -248,7 +232,7 @@ export function DrawingToolbar({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`w-full h-8 ${toolbarCollapsed ? "hidden" : ""}`}
+                  className={`w-full h-8`}
                   onClick={() => activateDrawingTool("deleteselected")}
                 >
                   <Trash2 size={16} />
