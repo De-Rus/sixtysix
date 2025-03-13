@@ -7,7 +7,6 @@ import type { ChartProps, DataPoint } from "../types/chart-types";
 import { ChartToolbar } from "./chart-toolbar";
 import { generateData } from "@/utils/indicator-calculations";
 import { mockStocks } from "@/utils/mock-stocks";
-import { TradingPanel } from "./trading-panel";
 import type { Order, Trade, Position } from "@/types/trading-types";
 import { TradeEntryDialog } from "./trade-entry-dialog";
 import { v4 as uuidv4 } from "uuid";
@@ -18,7 +17,7 @@ import { useSubplotHeights, useSubplotRanges } from "@/utils/chart-subplots";
 import { generateChartLayout, generateChartConfig } from "@/utils/chart-layout";
 import { generatePlotData } from "@/utils/chart-indicators";
 import { ChartDragZone } from "./chart-drag-zone";
-import { X } from "lucide-react";
+import { Legend } from "@/components/chart/CustomLegend";
 
 // Add this import at the top of the file
 import { IndicatorConfigDialog } from "./indicator-config-dialog";
@@ -38,85 +37,10 @@ interface CandlestickChartProps extends ChartProps {
   symbol?: string;
   onSymbolChange?: (symbol: string) => void;
   orders?: Order[];
-  trades?: Trade[];
   positions?: Position[];
   onCancelPosition?: (position: Position) => void;
   onNewOrder?: (order: Order) => void;
 }
-
-// Shape interfaces
-interface SimpleLine {
-  type: "line";
-  x0: string;
-  y0: number;
-  x1: string;
-  y1: number;
-  color: string;
-  width: number;
-}
-
-interface SimpleRectangle {
-  type: "rect";
-  x0: string;
-  y0: number;
-  x1: string;
-  y1: number;
-  color: string;
-  width: number;
-  fillcolor?: string;
-  opacity?: number;
-}
-
-type SimpleShape = SimpleLine | SimpleRectangle;
-
-// Define indicator details for the custom legend
-const INDICATOR_DETAILS = {
-  sma: {
-    name: "SMA",
-    color: "rgb(249, 115, 22)",
-    getLabel: (config: Record<string, any>) => `SMA (${config?.period || 14})`,
-  },
-  ema: {
-    name: "EMA",
-    color: "rgb(16, 185, 129)",
-    getLabel: (config: Record<string, any>) => `EMA (${config?.period || 9})`,
-  },
-  ichimoku: {
-    name: "Ichimoku",
-    color: "rgb(59, 130, 246)",
-    getLabel: (config: Record<string, any>) => {
-      const conversionPeriod = config?.conversionPeriod || 9;
-      const basePeriod = config?.basePeriod || 26;
-      const spanPeriod = config?.spanPeriod || 52;
-      const displacement = config?.displacement || 26;
-      return `Ichimoku (${conversionPeriod},${basePeriod},${spanPeriod},${displacement})`;
-    },
-  },
-  rsi: {
-    name: "RSI",
-    color: "rgb(139, 92, 246)",
-    getLabel: (config: Record<string, any>) => `RSI (${config?.period || 14})`,
-  },
-  macd: {
-    name: "MACD",
-    color: "rgb(236, 72, 153)",
-    getLabel: (config: Record<string, any>) => {
-      const fast = config?.fastPeriod || 12;
-      const slow = config?.slowPeriod || 26;
-      const signal = config?.signalPeriod || 9;
-      return `MACD (${fast},${slow},${signal})`;
-    },
-  },
-  bollinger: {
-    name: "Bollinger",
-    color: "rgb(251, 146, 60)",
-    getLabel: (config: Record<string, any>) => {
-      const period = config?.period || 20;
-      const stdDev = config?.stdDev || 2;
-      return `Bollinger (${period},${stdDev})`;
-    },
-  },
-};
 
 // Define indicator configurations with their default parameters
 const INDICATOR_CONFIGS = {
@@ -333,28 +257,23 @@ const INDICATOR_CONFIGS = {
   },
 };
 
-import {
-  DrawingState,
-  initDrawingState,
-  createLine,
-  updateLine,
-  isValidLine,
-} from "@/utils/drawing-utils";
-import type { SimpleShape } from "@/types/shape-types";
+import type {
+  SimpleLine,
+  SimpleRectangle,
+  SimpleShape,
+} from "@/types/shape-types";
 
 export default function CandlestickChart({
   data: initialData,
-  height = 600,
+  height = 400,
   showIchimoku: initialShowIchimoku = true,
   showSMA: initialShowSMA = false,
   showEMA: initialShowEMA = false,
   darkMode = false,
   symbol: initialSymbol = "AAPL",
-  onSymbolChange,
   orders = [],
-  trades = [],
   positions = [],
-  onCancelPosition,
+  onSymbolChange,
   onNewOrder,
 }: CandlestickChartProps) {
   // State
@@ -374,10 +293,7 @@ export default function CandlestickChart({
   >({});
   const [xAxisRange, setXAxisRange] = useState<[string, string] | null>(null);
   const [yAxisRange, setYAxisRange] = useState<[number, number] | null>(null);
-  const [tradeDialog, setTradeDialog] = useState<{
-    isOpen: boolean;
-    price?: number;
-  }>({ isOpen: false });
+
   const [rightClickData, setRightClickData] = useState<{
     price: number | null;
     time: string | null;
@@ -510,28 +426,6 @@ export default function CandlestickChart({
       updateChartData(timeframe);
     },
     [timeframe, onSymbolChange, updateChartData]
-  );
-
-  const handleNewOrder = useCallback(
-    (tradeDetails: {
-      side: OrderSide;
-      type: OrderType;
-      price: number;
-      quantity: number;
-    }) => {
-      if (!onNewOrder) return;
-
-      const order: Order = {
-        id: uuidv4(),
-        symbol,
-        timestamp: new Date().toISOString(),
-        status: "pending",
-        ...tradeDetails,
-      };
-
-      onNewOrder(order);
-    },
-    [onNewOrder, symbol]
   );
 
   // Add this function to the component
@@ -1247,57 +1141,6 @@ export default function CandlestickChart({
     }
   }, [indicatorConfigs, data.length]);
 
-  // Custom legend component
-  const CustomLegend = () => {
-    if (selectedIndicators.length === 0) return null;
-
-    return (
-      <div className="absolute left-4 top-4 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md rounded-md p-2 border border-gray-200 dark:border-gray-700">
-        <div className="text-sm font-medium mb-1 px-1">Indicators</div>
-        <ul className="space-y-1">
-          {selectedIndicators.map((indicator) => {
-            const details = INDICATOR_DETAILS[
-              indicator as keyof typeof INDICATOR_DETAILS
-            ] || {
-              name: indicator.charAt(0).toUpperCase() + indicator.slice(1),
-              color: "rgb(107, 114, 128)",
-              getLabel: () =>
-                indicator.charAt(0).toUpperCase() + indicator.slice(1),
-            };
-
-            // Get the configuration for this indicator
-            const config = indicatorConfigs[indicator] || {};
-
-            // Generate the label with configuration details
-            const label = details.getLabel(config);
-
-            return (
-              <li
-                key={indicator}
-                className="flex items-center justify-between gap-2 px-1 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded group"
-              >
-                <div
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => handleConfigureIndicator(indicator)}
-                >
-                  {/* Removed the color dot */}
-                  <span>{label}</span>
-                </div>
-                <button
-                  onClick={() => handleRemoveIndicator(indicator)}
-                  className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                  aria-label={`Remove ${details.name} indicator`}
-                >
-                  <X size={14} />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    );
-  };
-
   // Add a new state for the configuration dialog open state
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
 
@@ -1373,7 +1216,12 @@ export default function CandlestickChart({
           {showChart && (
             <>
               {/* Custom Legend */}
-              <CustomLegend />
+              <Legend
+                indicatorConfigs={indicatorConfigs}
+                onConfigureIndicator={handleConfigureIndicator}
+                onRemoveIndicator={handleRemoveIndicator}
+                selectedIndicators={selectedIndicators}
+              />
 
               <OrderContextMenu
                 onNewOrder={onNewOrder}
@@ -1476,19 +1324,6 @@ export default function CandlestickChart({
             </>
           )}
         </div>
-        <TradingPanel
-          orders={orders}
-          trades={trades}
-          positions={positions}
-          onCancelPosition={onCancelPosition}
-          className="mt-0"
-        />
-        <TradeEntryDialog
-          isOpen={tradeDialog.isOpen}
-          onClose={() => setTradeDialog({ isOpen: false })}
-          onSubmit={handleNewOrder}
-          defaultPrice={tradeDialog.price}
-        />
       </CardContent>
       {configDialog.indicator && (
         <IndicatorConfigDialog

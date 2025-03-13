@@ -1,30 +1,35 @@
-import type { Order } from "@/types/trading-types"
-import type { Trace } from "./indicators/base-indicator"
-import type { DataPoint } from "@/types/chart-types"
+import type { Order } from "@/types/trading-types";
+import type { Trace } from "./indicators/base/base-indicator";
+import type { DataPoint } from "@/types/chart-types";
 
-export function generateOrderTraces(orders: Order[], chartData: DataPoint[]): Trace[] {
+export function generateOrderTraces(
+  orders: Order[],
+  chartData: DataPoint[]
+): Trace[] {
   // Split orders by type for different visualizations
-  const buyOrders = orders.filter((o) => o.side === "buy")
-  const sellOrders = orders.filter((o) => o.side === "sell")
+  const buyOrders = orders.filter((o) => o.side === "buy");
+  const sellOrders = orders.filter((o) => o.side === "sell");
 
-  const traces: Trace[] = []
+  const traces: Trace[] = [];
 
   // Define colors with higher saturation
-  const buyColor = "rgb(0, 122, 255)" // Brighter blue
-  const sellColor = "rgb(255, 59, 48)" // Brighter red
+  const buyColor = "rgb(0, 122, 255)"; // Brighter blue
+  const sellColor = "rgb(255, 59, 48)"; // Brighter red
 
   // Helper function to find the corresponding candle price for the order time
   const findCandlePrice = (timestamp: string) => {
-    const orderTime = new Date(timestamp).getTime()
-    const candle = chartData.find((d) => new Date(d.time).getTime() >= orderTime)
-    return candle ? candle.close : null
-  }
+    const orderTime = new Date(timestamp).getTime();
+    const candle = chartData.find(
+      (d) => new Date(d.time).getTime() >= orderTime
+    );
+    return candle ? candle.close : null;
+  };
 
   // Generate buy order markers and lines
   if (buyOrders.length > 0) {
     // Add connecting lines first (so they appear behind the markers)
     buyOrders.forEach((order) => {
-      const candlePrice = findCandlePrice(order.timestamp)
+      const candlePrice = findCandlePrice(order.timestamp);
       if (candlePrice !== null) {
         traces.push({
           x: [order.timestamp, order.timestamp],
@@ -39,9 +44,9 @@ export function generateOrderTraces(orders: Order[], chartData: DataPoint[]): Tr
           },
           showlegend: false,
           hoverinfo: "none",
-        })
+        });
       }
-    })
+    });
 
     // Add markers
     traces.push({
@@ -66,16 +71,17 @@ export function generateOrderTraces(orders: Order[], chartData: DataPoint[]): Tr
       },
       hoverinfo: "text",
       hovertext: buyOrders.map(
-        (o) => `Buy ${o.symbol}<br>Price: ${o.price}<br>Qty: ${o.quantity}<br>Status: ${o.status}`,
+        (o) =>
+          `Buy ${o.symbol}<br>Price: ${o.price}<br>Qty: ${o.quantity}<br>Status: ${o.status}`
       ),
-    })
+    });
   }
 
   // Generate sell order markers and lines
   if (sellOrders.length > 0) {
     // Add connecting lines first
     sellOrders.forEach((order) => {
-      const candlePrice = findCandlePrice(order.timestamp)
+      const candlePrice = findCandlePrice(order.timestamp);
       if (candlePrice !== null) {
         traces.push({
           x: [order.timestamp, order.timestamp],
@@ -90,9 +96,9 @@ export function generateOrderTraces(orders: Order[], chartData: DataPoint[]): Tr
           },
           showlegend: false,
           hoverinfo: "none",
-        })
+        });
       }
-    })
+    });
 
     // Add markers
     traces.push({
@@ -117,11 +123,11 @@ export function generateOrderTraces(orders: Order[], chartData: DataPoint[]): Tr
       },
       hoverinfo: "text",
       hovertext: sellOrders.map(
-        (o) => `Sell ${o.symbol}<br>Price: ${o.price}<br>Qty: ${o.quantity}<br>Status: ${o.status}`,
+        (o) =>
+          `Sell ${o.symbol}<br>Price: ${o.price}<br>Qty: ${o.quantity}<br>Status: ${o.status}`
       ),
-    })
+    });
   }
 
-  return traces
+  return traces;
 }
-

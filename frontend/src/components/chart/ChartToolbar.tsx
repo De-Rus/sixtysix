@@ -33,8 +33,8 @@ import { SupertrendIndicator } from "@/utils/indicators/supertrend";
 import { TrendlineIndicator } from "@/utils/indicators/trendlines";
 import { BollingerBandsIndicator } from "@/utils/indicators/bollinger-bands";
 import { ChannelsIndicator } from "@/utils/indicators/channels";
-import { MACDIndicator } from "@/utils/indicators/macd";
-import { RenkoIndicator } from "@/utils/indicators/renko";
+import { MACDIndicator } from "@/utils/indicators/impl/macd";
+import { RenkoIndicator } from "@/utils/indicators/impl/renko";
 import { FibonacciIndicator } from "@/utils/indicators/fibonacci";
 import { ADXIndicator } from "@/utils/indicators/adx";
 import { Input } from "@/components/ui/input";
@@ -189,7 +189,7 @@ export function ChartToolbar({
   const indicators = [
     {
       value: "macd",
-      label: MACDIndicator.name,
+      label: MACDIndicator.indicatorName,
       configurable: true,
       defaultParams: MACDIndicator.defaultParams,
     },

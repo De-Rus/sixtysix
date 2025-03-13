@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { IndicatorConfigDialog } from "./indicator-config-dialog"
-import { MACDIndicator } from "@/utils/indicators/macd"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { IndicatorConfigDialog } from "./indicator-config-dialog";
+import { MACDIndicator } from "@/utils/indicators/impl/macd";
 
 export function IndicatorConfigTest() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [savedParams, setSavedParams] = useState<Record<string, any>>({})
+  const [isOpen, setIsOpen] = useState(false);
+  const [savedParams, setSavedParams] = useState<Record<string, any>>({});
 
   // Create a deep copy of the MACD default parameters
-  const macdParams = JSON.parse(JSON.stringify(MACDIndicator.defaultParams))
+  const macdParams = JSON.parse(JSON.stringify(MACDIndicator.defaultParams));
 
   const handleSave = (params: Record<string, any>) => {
-    console.log("Saved parameters:", params)
-    setSavedParams(params)
-  }
+    console.log("Saved parameters:", params);
+    setSavedParams(params);
+  };
 
   return (
     <div className="p-4">
@@ -26,7 +26,9 @@ export function IndicatorConfigTest() {
       {Object.keys(savedParams).length > 0 && (
         <div className="mt-4 p-4 border rounded">
           <h3 className="font-semibold mb-2">Saved Parameters:</h3>
-          <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(savedParams, null, 2)}</pre>
+          <pre className="bg-gray-100 p-2 rounded">
+            {JSON.stringify(savedParams, null, 2)}
+          </pre>
         </div>
       )}
 
@@ -38,6 +40,5 @@ export function IndicatorConfigTest() {
         onSave={handleSave}
       />
     </div>
-  )
+  );
 }
-

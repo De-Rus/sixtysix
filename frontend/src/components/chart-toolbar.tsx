@@ -1,48 +1,64 @@
-"use client"
+"use client";
 
-import { useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { BarChart3, ChevronDown, LineChart, Plus, Search } from "lucide-react"
-import { searchStocks, type StockSymbol } from "@/utils/mock-stocks"
-import { useState } from "react"
-import { IndicatorConfigDialog } from "./indicator-config-dialog"
-import { IchimokuIndicator } from "@/utils/indicators/ichimoku"
-import { SMAIndicator, EMAIndicator } from "@/utils/indicators/moving-averages"
-import { SupertrendIndicator } from "@/utils/indicators/supertrend"
-import { TrendlineIndicator } from "@/utils/indicators/trendlines"
-import { BollingerBandsIndicator } from "@/utils/indicators/bollinger-bands"
-import { ChannelsIndicator } from "@/utils/indicators/channels"
-import { MACDIndicator } from "@/utils/indicators/macd"
-import { RenkoIndicator } from "@/utils/indicators/renko"
-import { FibonacciIndicator } from "@/utils/indicators/fibonacci"
-import { ADXIndicator } from "@/utils/indicators/adx"
-import { Input } from "@/components/ui/input"
-import { ElliottWaveIndicator } from "@/utils/indicators/elliott-wave"
-import { SqueezeMomentumIndicator } from "@/utils/indicators/squeeze-momentum"
-import { ParabolicSARIndicator } from "@/utils/indicators/parabolic-sar"
-import { DonchianChannelsIndicator } from "@/utils/indicators/donchian"
-import { RSIIndicator } from "@/utils/indicators/rsi"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  ADXIndicator,
+  BollingerBandsIndicator,
+  ChannelsIndicator,
+  DonchianChannelsIndicator,
+  ElliottWaveIndicator,
+  EMAIndicator,
+  FibonacciIndicator,
+  IchimokuIndicator,
+  MACDIndicator,
+  ParabolicSARIndicator,
+  RenkoIndicator,
+  RSIIndicator,
+  SMAIndicator,
+  SqueezeMomentumIndicator,
+  SupertrendIndicator,
+  TrendlineIndicator,
+} from "@/utils/indicators";
+import { searchStocks, type StockSymbol } from "@/utils/mock-stocks";
+import { BarChart3, ChevronDown, LineChart, Plus, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { IndicatorConfigDialog } from "./indicator-config-dialog";
 
 interface ChartToolbarProps {
-  selectedTimeframe: string
-  onTimeframeChange: (timeframe: string) => void
-  selectedIndicators: string[]
-  onIndicatorChange: (indicator: string, checked: boolean) => void
-  selectedSymbol: string
-  onSymbolChange: (symbol: string) => void
-  onIndicatorConfigChange: (indicator: string, config: Record<string, any>) => void
-  configureIndicator?: string | null
-  onConfigureIndicator?: (indicator: string | null) => void
+  selectedTimeframe: string;
+  onTimeframeChange: (timeframe: string) => void;
+  selectedIndicators: string[];
+  onIndicatorChange: (indicator: string, checked: boolean) => void;
+  selectedSymbol: string;
+  onSymbolChange: (symbol: string) => void;
+  onIndicatorConfigChange: (
+    indicator: string,
+    config: Record<string, any>
+  ) => void;
+  configureIndicator?: string | null;
+  onConfigureIndicator?: (indicator: string | null) => void;
 }
 
 export function ChartToolbar({
@@ -56,25 +72,25 @@ export function ChartToolbar({
   configureIndicator,
   onConfigureIndicator,
 }: ChartToolbarProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<StockSymbol[]>([])
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const searchInputRef = useRef<HTMLInputElement>(null)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<StockSymbol[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [configDialog, setConfigDialog] = useState<{
-    open: boolean
-    indicator?: (typeof indicators)[0]
-  }>({ open: false })
+    open: boolean;
+    indicator?: (typeof indicators)[0];
+  }>({ open: false });
 
   const [configDialogState, setConfigDialogState] = useState<{
-    isOpen: boolean
-    indicator: string | null
-  }>({ isOpen: false, indicator: null })
+    isOpen: boolean;
+    indicator: string | null;
+  }>({ isOpen: false, indicator: null });
 
   const visibleTimeframes = [
     { value: "1m", label: "1m" },
     { value: "5m", label: "5m" },
     { value: "15m", label: "15m" },
-  ]
+  ];
 
   const dropdownTimeframes = [
     { value: "30m", label: "30m" },
@@ -82,160 +98,163 @@ export function ChartToolbar({
     { value: "4h", label: "4h" },
     { value: "1D", label: "1D" },
     { value: "1W", label: "1W" },
-  ]
+  ];
 
   const handleTimeframeClick = (timeframe: string) => {
-    console.log("Toolbar: timeframe clicked:", timeframe)
-    onTimeframeChange?.(timeframe)
-  }
+    console.log("Toolbar: timeframe clicked:", timeframe);
+    onTimeframeChange?.(timeframe);
+  };
 
   const indicators = [
     {
       value: "renko",
-      label: RenkoIndicator.name,
+      label: RenkoIndicator.indicatorName,
       configurable: true,
       defaultParams: RenkoIndicator.defaultParams,
     },
     {
       value: "macd",
-      label: MACDIndicator.name,
+      label: MACDIndicator.indicatorName,
       configurable: true,
       defaultParams: MACDIndicator.defaultParams,
     },
     {
       value: "adx",
-      label: ADXIndicator.name,
+      label: ADXIndicator.indicatorName,
       configurable: true,
       defaultParams: ADXIndicator.defaultParams,
     },
     {
       value: "ichimoku",
-      label: IchimokuIndicator.name,
+      label: IchimokuIndicator.indicatorName,
       configurable: true,
       defaultParams: IchimokuIndicator.defaultParams,
     },
     {
       value: "sma",
-      label: SMAIndicator.name,
+      label: SMAIndicator.indicatorName,
       configurable: true,
       defaultParams: SMAIndicator.defaultParams,
     },
     {
       value: "ema",
-      label: EMAIndicator.name,
+      label: EMAIndicator.indicatorName,
       configurable: true,
       defaultParams: EMAIndicator.defaultParams,
     },
     {
       value: "supertrend",
-      label: SupertrendIndicator.name,
+      label: SupertrendIndicator.indicatorName,
       configurable: true,
       defaultParams: SupertrendIndicator.defaultParams,
     },
     { value: "smaCrossover", label: "SMA Crossover (20, 50)" },
     {
       value: "trendlines",
-      label: TrendlineIndicator.name,
+      label: TrendlineIndicator.indicatorName,
       configurable: true,
       defaultParams: TrendlineIndicator.defaultParams,
     },
     { value: "supportResistance", label: "Support & Resistance" },
     {
       value: "bollingerBands",
-      label: BollingerBandsIndicator.name,
+      label: BollingerBandsIndicator.indicatorName,
       configurable: true,
       defaultParams: BollingerBandsIndicator.defaultParams,
     },
     {
       value: "channels",
-      label: ChannelsIndicator.name,
+      label: ChannelsIndicator.indicatorName,
       configurable: true,
       defaultParams: ChannelsIndicator.defaultParams,
     },
     {
       value: "fibonacci",
-      label: FibonacciIndicator.name,
+      label: FibonacciIndicator.indicatorName,
       configurable: true,
       defaultParams: FibonacciIndicator.defaultParams,
     },
     {
       value: "elliottWave",
-      label: ElliottWaveIndicator.name,
+      label: ElliottWaveIndicator.indicatorName,
       configurable: true,
       defaultParams: ElliottWaveIndicator.defaultParams,
     },
     {
       value: "squeezeMomentum",
-      label: SqueezeMomentumIndicator.name,
+      label: SqueezeMomentumIndicator.indicatorName,
       configurable: true,
       defaultParams: SqueezeMomentumIndicator.defaultParams,
     },
     {
       value: "parabolicSar",
-      label: ParabolicSARIndicator.name,
+      label: ParabolicSARIndicator.indicatorName,
       configurable: true,
       defaultParams: ParabolicSARIndicator.defaultParams,
     },
     {
       value: "donchian",
-      label: DonchianChannelsIndicator.name,
+      label: DonchianChannelsIndicator.indicatorName,
       configurable: true,
       defaultParams: DonchianChannelsIndicator.defaultParams,
     },
     {
       value: "rsi",
-      label: RSIIndicator.name,
+      label: RSIIndicator.indicatorName,
       configurable: true,
       defaultParams: RSIIndicator.defaultParams,
     },
-  ]
+  ];
 
   const filteredIndicators = indicators.filter((indicator) =>
-    indicator.label.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+    indicator.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     if (searchQuery) {
-      const results = searchStocks(searchQuery)
-      setSearchResults(results)
+      const results = searchStocks(searchQuery);
+      setSearchResults(results);
     } else {
-      setSearchResults([])
+      setSearchResults([]);
     }
-  }, [searchQuery])
+  }, [searchQuery]);
 
   const handleSymbolSelect = (symbol: string) => {
-    onSymbolChange?.(symbol)
-    setIsSearchOpen(false)
-    setSearchQuery("")
-  }
+    onSymbolChange?.(symbol);
+    setIsSearchOpen(false);
+    setSearchQuery("");
+  };
 
-  const handleIndicatorSelect = (indicator: (typeof indicators)[0], checked: boolean) => {
+  const handleIndicatorSelect = (
+    indicator: (typeof indicators)[0],
+    checked: boolean
+  ) => {
     if (checked && indicator.configurable) {
-      setConfigDialog({ open: true, indicator })
+      setConfigDialog({ open: true, indicator });
     } else {
-      onIndicatorChange?.(indicator.value, checked)
+      onIndicatorChange?.(indicator.value, checked);
     }
-  }
+  };
 
   const handleConfigSave = (params: Record<string, any>) => {
     if (configDialog.indicator) {
-      onIndicatorChange?.(configDialog.indicator.value, true)
-      onIndicatorConfigChange?.(configDialog.indicator.value, params)
+      onIndicatorChange?.(configDialog.indicator.value, true);
+      onIndicatorConfigChange?.(configDialog.indicator.value, params);
     }
-  }
+  };
 
   useEffect(() => {
     if (configureIndicator) {
       setConfigDialogState({
         isOpen: true,
         indicator: configureIndicator,
-      })
+      });
       // Reset the configureIndicator state after opening the dialog
       if (onConfigureIndicator) {
-        onConfigureIndicator(null)
+        onConfigureIndicator(null);
       }
     }
-  }, [configureIndicator, onConfigureIndicator])
+  }, [configureIndicator, onConfigureIndicator]);
 
   return (
     <>
@@ -253,7 +272,13 @@ export function ChartToolbar({
                 <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0" align="start" side="bottom" alignOffset={0} sideOffset={8}>
+            <PopoverContent
+              className="w-[400px] p-0"
+              align="start"
+              side="bottom"
+              alignOffset={0}
+              sideOffset={8}
+            >
               <Command>
                 <CommandInput
                   placeholder="Search symbols..."
@@ -274,9 +299,13 @@ export function ChartToolbar({
                       >
                         <div className="flex flex-col">
                           <span className="font-medium">{stock.symbol}</span>
-                          <span className="text-sm text-muted-foreground">{stock.name}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {stock.name}
+                          </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">{stock.sector}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {stock.sector}
+                        </span>
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -350,7 +379,9 @@ export function ChartToolbar({
               <DropdownMenuCheckboxItem
                 key={indicator.value}
                 checked={selectedIndicators.includes(indicator.value)}
-                onCheckedChange={(checked) => handleIndicatorSelect(indicator, checked)}
+                onCheckedChange={(checked) =>
+                  handleIndicatorSelect(indicator, checked)
+                }
               >
                 {indicator.label}
               </DropdownMenuCheckboxItem>
@@ -369,8 +400,7 @@ export function ChartToolbar({
         />
       )}
     </>
-  )
+  );
 }
 
-export default ChartToolbar
-
+export default ChartToolbar;
