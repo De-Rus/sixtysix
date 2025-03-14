@@ -23,28 +23,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  ADXIndicator,
-  BollingerBandsIndicator,
-  ChannelsIndicator,
-  DonchianChannelsIndicator,
-  ElliottWaveIndicator,
-  EMAIndicator,
-  FibonacciIndicator,
-  IchimokuIndicator,
-  MACDIndicator,
-  ParabolicSARIndicator,
-  RenkoIndicator,
-  RSIIndicator,
-  SMAIndicator,
-  SqueezeMomentumIndicator,
-  SupertrendIndicator,
-  TrendlineIndicator,
-} from "@/utils/indicators";
 import { searchStocks, type StockSymbol } from "@/mocks/mock-stocks";
 import { BarChart3, ChevronDown, LineChart, Plus, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { IndicatorConfigDialog } from "../indicator-config-dialog";
+import {
+  IndicatorConstructor,
+  indicatorRegistry,
+} from "@/utils/indicators/registry";
 
 interface ChartToolbarProps {
   selectedTimeframe: string;
@@ -105,110 +91,33 @@ export function ChartToolbar({
     onTimeframeChange?.(timeframe);
   };
 
-  const indicators = [
-    {
-      value: "renko",
-      label: RenkoIndicator.indicatorName,
-      configurable: true,
-      defaultParams: RenkoIndicator.defaultParams,
-    },
-    {
-      value: "macd",
-      label: MACDIndicator.indicatorName,
-      configurable: true,
-      defaultParams: MACDIndicator.defaultParams,
-    },
-    {
-      value: "adx",
-      label: ADXIndicator.indicatorName,
-      configurable: true,
-      defaultParams: ADXIndicator.defaultParams,
-    },
-    {
-      value: "ichimoku",
-      label: IchimokuIndicator.indicatorName,
-      configurable: true,
-      defaultParams: IchimokuIndicator.defaultParams,
-    },
-    {
-      value: "sma",
-      label: SMAIndicator.indicatorName,
-      configurable: true,
-      defaultParams: SMAIndicator.defaultParams,
-    },
-    {
-      value: "ema",
-      label: EMAIndicator.indicatorName,
-      configurable: true,
-      defaultParams: EMAIndicator.defaultParams,
-    },
-    {
-      value: "supertrend",
-      label: SupertrendIndicator.indicatorName,
-      configurable: true,
-      defaultParams: SupertrendIndicator.defaultParams,
-    },
-    { value: "smaCrossover", label: "SMA Crossover (20, 50)" },
-    {
-      value: "trendlines",
-      label: TrendlineIndicator.indicatorName,
-      configurable: true,
-      defaultParams: TrendlineIndicator.defaultParams,
-    },
-    { value: "supportResistance", label: "Support & Resistance" },
-    {
-      value: "bollingerBands",
-      label: BollingerBandsIndicator.indicatorName,
-      configurable: true,
-      defaultParams: BollingerBandsIndicator.defaultParams,
-    },
-    {
-      value: "channels",
-      label: ChannelsIndicator.indicatorName,
-      configurable: true,
-      defaultParams: ChannelsIndicator.defaultParams,
-    },
-    {
-      value: "fibonacci",
-      label: FibonacciIndicator.indicatorName,
-      configurable: true,
-      defaultParams: FibonacciIndicator.defaultParams,
-    },
-    {
-      value: "elliottWave",
-      label: ElliottWaveIndicator.indicatorName,
-      configurable: true,
-      defaultParams: ElliottWaveIndicator.defaultParams,
-    },
-    {
-      value: "squeezeMomentum",
-      label: SqueezeMomentumIndicator.indicatorName,
-      configurable: true,
-      defaultParams: SqueezeMomentumIndicator.defaultParams,
-    },
-    {
-      value: "parabolicSar",
-      label: ParabolicSARIndicator.indicatorName,
-      configurable: true,
-      defaultParams: ParabolicSARIndicator.defaultParams,
-    },
-    {
-      value: "donchian",
-      label: DonchianChannelsIndicator.indicatorName,
-      configurable: true,
-      defaultParams: DonchianChannelsIndicator.defaultParams,
-    },
-    {
-      value: "rsi",
-      label: RSIIndicator.indicatorName,
-      configurable: true,
-      defaultParams: RSIIndicator.defaultParams,
-    },
-  ];
+  // Replace the static indicators array with dynamic generation from registry
+  const indicators = indicatorRegistry
+    .getRegisteredIndicators()
+    .map((id) => ({
+      id,
+      indicator: indicatorRegistry.get(id) as IndicatorConstructor,
+    }))
+    .filter(({ indicator }) => !!indicator)
+    .map(
+      ({ id, indicator }: { id: string; indicator: IndicatorConstructor }) => {
+        return {
+          value: id,
+          // @ts-ignore
+          label: indicator.indicatorName,
+          configurable: true,
+          // @ts-ignore
+          defaultParams: indicator.defaultParams || [],
+        };
+      }
+    )
+    .filter(Boolean);
 
-  const filteredIndicators = indicators.filter((indicator) =>
-    indicator.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredIndicators = indicators.filter((indicator) => {
+    if (!indicator) return false;
+    if (!searchQuery) return true;
+    return indicator.label.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   useEffect(() => {
     if (searchQuery) {
@@ -229,7 +138,7 @@ export function ChartToolbar({
     indicator: (typeof indicators)[0],
     checked: boolean
   ) => {
-    if (checked && indicator.configurable) {
+    if (checked) {
       setConfigDialog({ open: true, indicator });
     } else {
       onIndicatorChange?.(indicator.value, checked);

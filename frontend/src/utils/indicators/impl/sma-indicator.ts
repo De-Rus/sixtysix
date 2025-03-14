@@ -1,12 +1,8 @@
-import { Indicator, type Trace } from "../base/indicator";
+import { Indicator, IndicatorParameter, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
-  IndicatorParameter,
-} from "../base/configurable-indicator";
 import { calculateSMA } from "../calculations/sma";
 
-export class SMAIndicator extends Indicator implements ConfigurableIndicator {
+export class SMAIndicator extends Indicator {
   static readonly indicatorName = "SMA";
   static readonly defaultParams: IndicatorParameter[] = [
     {

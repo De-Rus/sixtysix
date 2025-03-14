@@ -1,26 +1,7 @@
 import type { DataPoint } from "../../types/chart-types";
 import type { Order, Position } from "../../types/trading-types";
-import { IchimokuIndicator } from "../indicators";
-import {
-  ADXIndicator,
-  BollingerBandsIndicator,
-  ChannelsIndicator,
-  DonchianChannelsIndicator,
-  ElliottWaveIndicator,
-  EMAIndicator,
-  FibonacciIndicator,
-  ParabolicSARIndicator,
-  RSIIndicator,
-  SMACrossoverIndicator,
-  SMAIndicator,
-  SqueezeMomentumIndicator,
-  SupertrendIndicator,
-  SupportResistanceIndicator,
-  TrendlineIndicator,
-} from "../indicators";
-import type { Indicator, Trace } from "../indicators/base/indicator";
-import { MACDIndicator } from "../indicators/impl/macd";
-import { RenkoIndicator } from "../indicators/impl/renko";
+import type { Trace } from "../indicators/base/indicator";
+import { indicatorRegistry } from "../indicators/registry";
 import { generateOrderTraces } from "./order-traces";
 import { generatePositionTraces } from "./position-traces";
 
@@ -98,102 +79,19 @@ export function generatePlotData({
 
   // Process all selected indicators
   selectedIndicators.forEach((indicatorId) => {
-    let indicator: Indicator | null = null;
+    const indicator = indicatorRegistry.createIndicator(indicatorId, data);
     const config = indicatorConfigs[indicatorId] || {};
-
-    // Create the appropriate indicator instance
-    switch (indicatorId) {
-      case "renko":
-        indicator = new RenkoIndicator(data);
-        break;
-      case "macd":
-        indicator = new MACDIndicator(data);
-        break;
-      case "ichimoku":
-        indicator = new IchimokuIndicator(data);
-        break;
-      case "sma":
-        indicator = new SMAIndicator(data);
-        break;
-      case "ema":
-        indicator = new EMAIndicator(data);
-        break;
-      case "supertrend":
-        indicator = new SupertrendIndicator(data);
-        break;
-      case "smaCrossover":
-        indicator = new SMACrossoverIndicator(data);
-        break;
-      case "trendlines":
-        indicator = new TrendlineIndicator(data);
-        break;
-      case "supportResistance":
-        indicator = new SupportResistanceIndicator(data);
-        break;
-      case "bollingerBands":
-        indicator = new BollingerBandsIndicator(data);
-        break;
-      case "channels":
-        indicator = new ChannelsIndicator(data);
-        break;
-      case "fibonacci":
-        indicator = new FibonacciIndicator(data);
-        break;
-      case "adx":
-        indicator = new ADXIndicator(data);
-        break;
-      case "elliottWave":
-        indicator = new ElliottWaveIndicator(data);
-        break;
-      case "squeezeMomentum":
-        indicator = new SqueezeMomentumIndicator(data);
-        break;
-      case "parabolicSar":
-        indicator = new ParabolicSARIndicator(data);
-        break;
-      case "donchian":
-        indicator = new DonchianChannelsIndicator(data);
-        break;
-      case "rsi":
-        indicator = new RSIIndicator(data);
-        break;
-      default:
-        break;
-    }
 
     if (indicator) {
       indicator.setParameters(config);
 
+      // Get indicator traces
       const traces = indicator.generateTraces();
 
-      // Add hoverinfo: "none" to all indicator traces
-      traces.forEach((trace) => {
-        trace.hoverinfo = "none";
-      });
-
-      const indicatorConfig = (
-        indicator.constructor as typeof Indicator
-      ).getConfig();
-      if (indicatorConfig.subplot) {
-        // For subplot traces, use corresponding axis number
-        const subplotIndex = subplotIndicators.indexOf(indicatorId);
-        if (subplotIndex !== -1) {
-          const axisNumber = subplotIndex + 2; // yaxis2, yaxis3, etc.
-          traces.forEach((trace) => {
-            trace.xaxis = `x${axisNumber}`;
-            trace.yaxis = `y${axisNumber}`;
-            // Ensure the trace knows it belongs to a subplot
-            trace.subplot = true;
-          });
-          subplotTraces.push(...traces);
-        }
+      // Add traces to appropriate array based on subplot configuration
+      if (indicator.constructor.getConfig().subplot) {
+        subplotTraces.push(...traces);
       } else {
-        // For main pane traces, explicitly set to main axes
-        traces.forEach((trace) => {
-          trace.xaxis = "x";
-          trace.yaxis = "y";
-          trace.subplot = false;
-        });
         mainPaneTraces.push(...traces);
       }
     }

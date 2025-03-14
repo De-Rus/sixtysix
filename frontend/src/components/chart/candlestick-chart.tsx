@@ -37,220 +37,26 @@ interface CandlestickChartProps extends ChartProps {
   onNewOrder?: (order: Order) => void;
 }
 
-// Define indicator configurations with their default parameters
-const INDICATOR_CONFIGS = {
-  sma: {
-    label: "SMA",
-    defaultParams: [
-      {
-        name: "period",
-        type: "number",
-        label: "Period",
-        value: 14,
-        min: 1,
-        max: 200,
-      },
-      {
-        name: "color",
-        type: "color",
-        label: "Color",
-        value: "rgb(249, 115, 22)",
-      },
-    ],
-  },
-  ema: {
-    label: "EMA",
-    defaultParams: [
-      {
-        name: "period",
-        type: "number",
-        label: "Period",
-        value: 9,
-        min: 1,
-        max: 200,
-      },
-      {
-        name: "color",
-        type: "color",
-        label: "Color",
-        value: "rgb(16, 185, 129)",
-      },
-    ],
-  },
-  rsi: {
-    label: "RSI",
-    defaultParams: [
-      {
-        name: "period",
-        type: "number",
-        label: "Period",
-        value: 14,
-        min: 1,
-        max: 200,
-      },
-      {
-        name: "color",
-        type: "color",
-        label: "Color",
-        value: "rgb(139, 92, 246)",
-      },
-    ],
-  },
-  macd: {
-    label: "MACD",
-    defaultParams: [
-      {
-        name: "fastPeriod",
-        type: "number",
-        label: "Fast Period",
-        value: 12,
-        min: 1,
-        max: 200,
-      },
-      {
-        name: "slowPeriod",
-        type: "number",
-        label: "Slow Period",
-        value: 26,
-        min: 1,
-        max: 200,
-      },
-      {
-        name: "signalPeriod",
-        type: "number",
-        label: "Signal Period",
-        value: 9,
-        min: 1,
-        max: 200,
-      },
-      {
-        name: "macdColor",
-        type: "color",
-        label: "MACD Line Color",
-        value: "rgb(59, 130, 246)",
-      },
-      {
-        name: "signalColor",
-        type: "color",
-        label: "Signal Line Color",
-        value: "rgb(249, 115, 22)",
-      },
-      {
-        name: "histogramColor",
-        type: "color",
-        label: "Histogram Color",
-        value: "rgb(139, 92, 246)",
-      },
-    ],
-  },
-  bollinger: {
-    label: "Bollinger Bands",
-    defaultParams: [
-      {
-        name: "period",
-        type: "number",
-        label: "Period",
-        value: 20,
-        min: 1,
-        max: 200,
-      },
-      {
-        name: "stdDev",
-        type: "number",
-        label: "Standard Deviation",
-        value: 2,
-        min: 0.1,
-        max: 5,
-        step: 0.1,
-      },
-      {
-        name: "upperColor",
-        type: "color",
-        label: "Upper Band Color",
-        value: "rgb(59, 130, 246)",
-      },
-      {
-        name: "middleColor",
-        type: "color",
-        label: "Middle Band Color",
-        value: "rgb(249, 115, 22)",
-      },
-      {
-        name: "lowerColor",
-        type: "color",
-        label: "Lower Band Color",
-        value: "rgb(139, 92, 246)",
-      },
-    ],
-  },
-  ichimoku: {
-    label: "Ichimoku",
-    defaultParams: [
-      {
-        name: "conversionPeriod",
-        type: "number",
-        label: "Conversion Period",
-        value: 9,
-        min: 1,
-        max: 200,
-      },
-      {
-        name: "basePeriod",
-        type: "number",
-        label: "Base Period",
-        value: 26,
-        min: 1,
-        max: 200,
-      },
-      {
-        name: "spanPeriod",
-        type: "number",
-        label: "Span Period",
-        value: 52,
-        min: 1,
-        max: 200,
-      },
-      {
-        name: "displacement",
-        type: "number",
-        label: "Displacement",
-        value: 26,
-        min: 1,
-        max: 200,
-      },
-      {
-        name: "conversionColor",
-        type: "color",
-        label: "Conversion Line Color",
-        value: "rgb(59, 130, 246)",
-      },
-      {
-        name: "baseColor",
-        type: "color",
-        label: "Base Line Color",
-        value: "rgb(249, 115, 22)",
-      },
-      {
-        name: "spanAColor",
-        type: "color",
-        label: "Span A Color",
-        value: "rgba(59, 130, 246, 0.5)",
-      },
-      {
-        name: "spanBColor",
-        type: "color",
-        label: "Span B Color",
-        value: "rgba(236, 72, 153, 0.5)",
-      },
-      {
-        name: "chikouColor",
-        type: "color",
-        label: "Chikou Color",
-        value: "rgb(139, 92, 246)",
-      },
-    ],
-  },
-};
+const INDICATOR_CONFIGS = Object.fromEntries(
+  indicatorRegistry
+    .getRegisteredIndicators()
+    .map((id) => {
+      const IndicatorClass = indicatorRegistry.get(id);
+      if (!IndicatorClass) return undefined;
+
+      return [
+        id,
+        {
+          label: (IndicatorClass as any).indicatorName || id,
+          defaultParams: (IndicatorClass as any).defaultParams || [],
+        },
+      ] as const;
+    })
+    .filter(
+      (entry): entry is [string, { label: string; defaultParams: any[] }] =>
+        entry !== undefined
+    )
+);
 
 import type {
   SimpleLine,
@@ -259,6 +65,7 @@ import type {
 } from "@/types/shape-types";
 import { generateChartConfig, generateChartLayout } from "@/utils/chart/layout";
 import { generateData } from "@/utils/mock";
+import { indicatorRegistry } from "@/utils/indicators/registry";
 
 export default function CandlestickChart({
   data: initialData,
@@ -319,11 +126,7 @@ export default function CandlestickChart({
   const plotRef = useRef<any>(null);
 
   // Custom hooks
-  const { subplotHeights, setIsDraggingSubplot } =
-    useSubplotHeights(selectedIndicators);
-  const { subplotRanges, setSubplotRanges } =
-    useSubplotRanges(selectedIndicators);
-
+  const { subplotHeights } = useSubplotHeights(selectedIndicators);
   // Calculate the total height percentage taken by subplots
   const totalSubplotPercentage =
     subplotHeights.length * SUBPLOT_HEIGHT_PERCENTAGE;
@@ -1020,7 +823,7 @@ export default function CandlestickChart({
 
   // Add event listener for relayout events to keep subplot axes in sync
   useEffect(() => {
-    const plotElement = document.getElementById("plot-container");
+    const plotElement = document.getElementById("plot-container") as any;
     if (!plotElement || !window.Plotly) return;
 
     // Function to handle relayout events
@@ -1114,10 +917,15 @@ export default function CandlestickChart({
           params
         );
 
+        if (!configDialog?.indicator?.value) {
+          console.error("Indicator value is not defined");
+          return;
+        }
+
         // Update the indicator configuration
         setIndicatorConfigs((prev) => ({
           ...prev,
-          [configDialog.indicator.value]: params,
+          [configDialog.indicator!.value]: params,
         }));
 
         // Force a chart update by updating the chart key

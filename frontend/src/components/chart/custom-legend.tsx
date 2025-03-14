@@ -66,7 +66,7 @@ export function Legend({
 
   return (
     <div className="absolute left-4 top-4 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md rounded-md p-2 border border-gray-200 dark:border-gray-700">
-      <div className="text-sm font-medium mb-1 px-1">Indicators</div>
+      {/* <div className="text-sm font-medium mb-1 px-1">Indicators</div> */}
       <ul className="space-y-1">
         {selectedIndicators.map((indicator) => {
           const details = INDICATOR_DETAILS[

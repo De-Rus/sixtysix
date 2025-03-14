@@ -15,6 +15,7 @@ interface SMACrossoverResult {
 }
 
 export class SMACrossoverIndicator extends Indicator {
+  static readonly indicatorName = "SMA CrossOver";
   private result: SMACrossoverResult | null = null;
   private fastPeriod: number;
   private slowPeriod: number;

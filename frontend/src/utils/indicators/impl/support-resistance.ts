@@ -12,6 +12,8 @@ interface SupportResistanceResult {
 }
 
 export class SupportResistanceIndicator extends Indicator {
+  static readonly indicatorName = "Support Resistance";
+
   private result: SupportResistanceResult | null = null;
   private numBins: number;
   private minStrength: number;
