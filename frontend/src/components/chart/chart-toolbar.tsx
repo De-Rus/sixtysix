@@ -44,7 +44,7 @@ import {
 import { searchStocks, type StockSymbol } from "@/utils/mock-stocks";
 import { BarChart3, ChevronDown, LineChart, Plus, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { IndicatorConfigDialog } from "./indicator-config-dialog";
+import { IndicatorConfigDialog } from "../indicator-config-dialog";
 
 interface ChartToolbarProps {
   selectedTimeframe: string;
@@ -357,10 +357,12 @@ export function ChartToolbar({
             <BarChart3 className="h-4 w-4" />
           </Button>
         </div>
-        <div className="h-4 w-px bg-border" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 px-2 text-xs">
+            <Button
+              variant="outline"
+              className="h-8 gap-1 px-2 text-xs ml-auto"
+            >
               Indicators
               <ChevronDown className="ml-1 h-3 w-3" />
             </Button>

@@ -3,24 +3,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Plot from "react-plotly.js";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import type { ChartProps, DataPoint } from "../types/chart-types";
+import type { ChartProps, DataPoint } from "../../types/chart-types";
 import { ChartToolbar } from "./chart-toolbar";
 import { generateData } from "@/utils/indicator-calculations";
 import { mockStocks } from "@/utils/mock-stocks";
-import type { Order, Trade, Position } from "@/types/trading-types";
-import { TradeEntryDialog } from "./trade-entry-dialog";
-import { v4 as uuidv4 } from "uuid";
-import type { OrderSide, OrderType } from "@/types/trading-types";
-import { OrderContextMenu } from "./order-context-menu";
+import type { Order, Position } from "@/types/trading-types";
+import { OrderContextMenu } from "../trading/order-context-menu";
 import { getAxisRange, getMouseEventData } from "@/utils/chart-utils";
 import { useSubplotHeights, useSubplotRanges } from "@/utils/chart-subplots";
 import { generateChartLayout, generateChartConfig } from "@/utils/chart-layout";
 import { generatePlotData } from "@/utils/chart-indicators";
-import { ChartDragZone } from "./chart-drag-zone";
-import { Legend } from "@/components/chart/CustomLegend";
+import { ChartDragZone } from "../chart-drag-zone";
+import { Legend } from "@/components/chart/custom-legend";
 
 // Add this import at the top of the file
-import { IndicatorConfigDialog } from "./indicator-config-dialog";
+import { IndicatorConfigDialog } from "../indicator-config-dialog";
 
 // Constants for chart layout
 const SUBPLOT_HEIGHT_PERCENTAGE = 0.3; // 30% of total height per subplot
