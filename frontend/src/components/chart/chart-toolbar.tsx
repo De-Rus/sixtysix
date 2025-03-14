@@ -138,17 +138,66 @@ export function ChartToolbar({
     indicator: (typeof indicators)[0],
     checked: boolean
   ) => {
-    if (checked) {
-      setConfigDialog({ open: true, indicator });
+    if (!indicator) return;
+
+    if (checked && indicator.configurable) {
+      // Get fresh default parameters from registry
+      const IndicatorClass = indicatorRegistry.get(indicator.value);
+      if (!IndicatorClass) return;
+
+      setConfigDialog({
+        open: true,
+        indicator: {
+          ...indicator,
+          // @ts-ignore - we know these properties exist
+          defaultParams: IndicatorClass.defaultParams || [],
+        },
+      });
     } else {
+      // If unchecking or not configurable, directly update
       onIndicatorChange?.(indicator.value, checked);
     }
   };
 
+  // const handleConfigSave = (params: Record<string, any>) => {
+  //   if (configDialog.indicator) {
+  //     onIndicatorChange?.(configDialog.indicator.value, true);
+  //     onIndicatorConfigChange?.(configDialog.indicator.value, params);
+  //   }
+  // };
+
+  useEffect(() => {
+    if (configureIndicator) {
+      const indicator = indicators.find(
+        (ind) => ind.value === configureIndicator
+      );
+      if (indicator) {
+        setConfigDialog({
+          open: true,
+          indicator,
+        });
+      }
+      // Reset the configureIndicator state after opening the dialog
+      if (onConfigureIndicator) {
+        onConfigureIndicator(null);
+      }
+    }
+  }, [configureIndicator, onConfigureIndicator, indicators]);
+
+  // Remove the unused configDialogState
+  // const [configDialogState, setConfigDialogState] = useState<{...}>({...});
+
   const handleConfigSave = (params: Record<string, any>) => {
     if (configDialog.indicator) {
-      onIndicatorChange?.(configDialog.indicator.value, true);
-      onIndicatorConfigChange?.(configDialog.indicator.value, params);
+      const indicatorValue = configDialog.indicator.value;
+      onIndicatorConfigChange?.(indicatorValue, params);
+
+      // Only trigger indicator change if it's not already selected
+      if (!selectedIndicators.includes(indicatorValue)) {
+        onIndicatorChange?.(indicatorValue, true);
+      }
+
+      setConfigDialog({ open: false });
     }
   };
 
