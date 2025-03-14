@@ -31,6 +31,16 @@ export class EMAIndicator extends Indicator {
     this.color = color;
   }
 
+  getParameters(): IndicatorParameter[] {
+    return EMAIndicator.defaultParams;
+  }
+
+  setParameters(params: Record<string, any>): void {
+    this.period = params.period;
+    this.color = params.color;
+    this.calculate();
+  }
+
   calculate(): void {
     this.result = calculateEMA(this.data, this.period);
   }

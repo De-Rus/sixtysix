@@ -124,14 +124,15 @@ export class IchimokuIndicator extends Indicator {
     this.colors = colors;
   }
 
+  getParameters(): IndicatorParameter[] {
+    return IchimokuIndicator.defaultParams;
+  }
+
   setParameters(params: Record<string, any>): void {
-    if (params.tenkanPeriod !== undefined)
-      this.tenkanPeriod = params.tenkanPeriod;
-    if (params.kijunPeriod !== undefined) this.kijunPeriod = params.kijunPeriod;
-    if (params.senkouPeriod !== undefined)
-      this.senkouPeriod = params.senkouPeriod;
-    if (params.chikouOffset !== undefined)
-      this.chikouOffset = params.chikouOffset;
+    this.tenkanPeriod = params.tenkanPeriod;
+    this.kijunPeriod = params.kijunPeriod;
+    this.senkouPeriod = params.senkouPeriod;
+    this.chikouOffset = params.chikouOffset;
 
     this.colors = {
       tenkan: params.tenkanColor || this.colors.tenkan,

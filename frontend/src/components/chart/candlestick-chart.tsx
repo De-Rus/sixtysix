@@ -115,7 +115,6 @@ export default function CandlestickChart({
   const [endPoint, setEndPoint] = useState<{ x: string; y: number } | null>(
     null
   );
-  const [shapes, setShapes] = useState<SimpleShape[]>([]);
   const [currentMousePosition, setCurrentMousePosition] = useState<{
     x: string;
     y: number;
@@ -363,463 +362,23 @@ export default function CandlestickChart({
 
       // Always update current mouse position
       setCurrentMousePosition(point);
-
-      // If we're in drawing mode and have started drawing
-      if (
-        (selectedTool === "line" || selectedTool === "rectangle") &&
-        isDrawing &&
-        startPoint
-      ) {
-        console.log(`Moving ${selectedTool} to:`, point);
-
-        // Update the end point state
-        setEndPoint(point);
-
-        // IMPORTANT: Immediately update the plot to show the shape
-        const plotElement = document.getElementById("plot-container");
-        if (plotElement && window.Plotly) {
-          try {
-            // Create shapes array with existing shapes and the active shape
-            const plotShapes = shapes
-              .map((shape) => {
-                if (shape.type === "line") {
-                  return {
-                    type: "line",
-                    x0: shape.x0,
-                    y0: shape.y0,
-                    x1: shape.x1,
-                    y1: shape.y1,
-                    line: {
-                      color: shape.color,
-                      width: shape.width,
-                    },
-                  };
-                } else if (shape.type === "rect") {
-                  return {
-                    type: "rect",
-                    x0: shape.x0,
-                    y0: shape.y0,
-                    x1: shape.x1,
-                    y1: shape.y1,
-                    line: {
-                      color: shape.color,
-                      width: shape.width,
-                    },
-                    fillcolor: shape.fillcolor || "rgba(0, 0, 255, 0.1)",
-                    opacity: shape.opacity || 0.2,
-                  };
-                }
-                return null;
-              })
-              .filter(Boolean);
-
-            // Add the active shape being drawn
-            if (selectedTool === "line") {
-              plotShapes.push({
-                type: "line",
-                x0: startPoint.x,
-                y0: startPoint.y,
-                x1: point.x,
-                y1: point.y,
-                line: {
-                  color: "rgb(255, 0, 0)", // Red for active line
-                  width: 2,
-                },
-              });
-            } else if (selectedTool === "rectangle") {
-              plotShapes.push({
-                type: "rect",
-                x0: startPoint.x,
-                y0: startPoint.y,
-                x1: point.x,
-                y1: point.y,
-                line: {
-                  color: "rgb(255, 0, 0)", // Red for active rectangle
-                  width: 2,
-                },
-                fillcolor: "rgba(255, 0, 0, 0.1)",
-                opacity: 0.2,
-              });
-            }
-
-            // Update the plot with the new shapes
-            window.Plotly.relayout(plotElement, { shapes: plotShapes });
-          } catch (error) {
-            console.error(
-              `Error updating ${selectedTool} during mouse move:`,
-              error
-            );
-          }
-        }
-      } else if (event.event && event.points?.length > 0) {
-        handlePlotEvent(event);
-      }
+      handlePlotEvent(event);
+      console.log(`Mouse moved to:`, point);
     },
-    [
-      selectedTool,
-      isDrawing,
-      startPoint,
-      shapes,
-      extractPointFromEvent,
-      handlePlotEvent,
-    ]
+    [extractPointFromEvent, handlePlotEvent]
   );
 
-  // Handle click for drawing
+  // // Handle click for drawing
   const handleClick = useCallback(
     (event: any) => {
-      if (selectedTool === "line" || selectedTool === "rectangle") {
-        const point = extractPointFromEvent(event);
-        if (!point) {
-          console.error("No valid point in click event");
-          return;
-        }
+      const point = extractPointFromEvent(event);
+      if (!point) return;
 
-        if (!isDrawing) {
-          // First click - start drawing
-          console.log(`Starting ${selectedTool} drawing at`, point);
-          setStartPoint(point);
-          setEndPoint(point); // Initialize end point to same as start
-          setIsDrawing(true);
-
-          // IMPORTANT: Immediately show the initial point
-          const plotElement = document.getElementById("plot-container");
-          if (plotElement && window.Plotly) {
-            try {
-              const plotShapes = shapes
-                .map((shape) => {
-                  if (shape.type === "line") {
-                    return {
-                      type: "line",
-                      x0: shape.x0,
-                      y0: shape.y0,
-                      x1: shape.x1,
-                      y1: shape.y1,
-                      line: {
-                        color: shape.color,
-                        width: shape.width,
-                      },
-                    };
-                  } else if (shape.type === "rect") {
-                    return {
-                      type: "rect",
-                      x0: shape.x0,
-                      y0: shape.y0,
-                      x1: shape.x1,
-                      y1: shape.y1,
-                      line: {
-                        color: shape.color,
-                        width: shape.width,
-                      },
-                      fillcolor: shape.fillcolor || "rgba(0, 0, 255, 0.1)",
-                      opacity: shape.opacity || 0.2,
-                    };
-                  }
-                  return null;
-                })
-                .filter(Boolean);
-
-              // Initial point of new shape
-              if (selectedTool === "line") {
-                plotShapes.push({
-                  type: "line",
-                  x0: point.x,
-                  y0: point.y,
-                  x1: point.x,
-                  y1: point.y,
-                  line: {
-                    color: "rgb(255, 0, 0)",
-                    width: 2,
-                  },
-                });
-              } else if (selectedTool === "rectangle") {
-                plotShapes.push({
-                  type: "rect",
-                  x0: point.x,
-                  y0: point.y,
-                  x1: point.x,
-                  y1: point.y,
-                  line: {
-                    color: "rgb(255, 0, 0)",
-                    width: 2,
-                  },
-                  fillcolor: "rgba(255, 0, 0, 0.1)",
-                  opacity: 0.2,
-                });
-              }
-
-              window.Plotly.relayout(plotElement, { shapes: plotShapes });
-            } catch (error) {
-              console.error("Error showing initial point:", error);
-            }
-          }
-        } else {
-          // Second click - complete the shape
-          if (!startPoint) {
-            console.error("No start point available");
-            return;
-          }
-
-          console.log(
-            `Completing ${selectedTool} from`,
-            startPoint,
-            "to",
-            point
-          );
-
-          // Add the completed shape to our shapes array
-          if (selectedTool === "line") {
-            const newLine: SimpleLine = {
-              type: "line",
-              x0: startPoint.x,
-              y0: startPoint.y,
-              x1: point.x,
-              y1: point.y,
-              color: "rgb(0, 0, 255)",
-              width: 2,
-            };
-            setShapes((prev) => [...prev, newLine]);
-          } else if (selectedTool === "rectangle") {
-            const newRect: SimpleRectangle = {
-              type: "rect",
-              x0: startPoint.x,
-              y0: startPoint.y,
-              x1: point.x,
-              y1: point.y,
-              color: "rgb(0, 0, 255)",
-              width: 2,
-              fillcolor: "rgba(0, 0, 255, 0.1)",
-              opacity: 0.2,
-            };
-            setShapes((prev) => [...prev, newRect]);
-          }
-
-          // Reset drawing state
-          setIsDrawing(false);
-          setStartPoint(null);
-          setEndPoint(null);
-
-          // Update the plot with all shapes
-          const plotElement = document.getElementById("plot-container");
-          if (plotElement && window.Plotly) {
-            const updatedShapes = [...shapes];
-            if (selectedTool === "line") {
-              updatedShapes.push({
-                type: "line",
-                x0: startPoint.x,
-                y0: startPoint.y,
-                x1: point.x,
-                y1: point.y,
-                color: "rgb(0, 0, 255)",
-                width: 2,
-              });
-            } else if (selectedTool === "rectangle") {
-              updatedShapes.push({
-                type: "rect",
-                x0: startPoint.x,
-                y0: startPoint.y,
-                x1: point.x,
-                y1: point.y,
-                color: "rgb(0, 0, 255)",
-                width: 2,
-                fillcolor: "rgba(0, 0, 255, 0.1)",
-                opacity: 0.2,
-              });
-            }
-
-            const plotShapes = updatedShapes
-              .map((shape) => {
-                if (shape.type === "line") {
-                  return {
-                    type: "line",
-                    x0: shape.x0,
-                    y0: shape.y0,
-                    x1: shape.x1,
-                    y1: shape.y1,
-                    line: {
-                      color: shape.color,
-                      width: shape.width,
-                    },
-                  };
-                } else if (shape.type === "rect") {
-                  return {
-                    type: "rect",
-                    x0: shape.x0,
-                    y0: shape.y0,
-                    x1: shape.x1,
-                    y1: shape.y1,
-                    line: {
-                      color: shape.color,
-                      width: shape.width,
-                    },
-                    fillcolor: shape.fillcolor || "rgba(0, 0, 255, 0.1)",
-                    opacity: shape.opacity || 0.2,
-                  };
-                }
-                return null;
-              })
-              .filter(Boolean);
-
-            window.Plotly.relayout(plotElement, { shapes: plotShapes });
-          }
-        }
-      } else if (selectedTool === "horizontal") {
-        // For horizontal lines, we draw across the entire chart with a single click
-        const point = extractPointFromEvent(event);
-        if (!point) {
-          console.error("No valid point in click event");
-          return;
-        }
-
-        console.log(`Drawing horizontal line at price ${point.y}`);
-
-        // Get the full x-range of the chart to draw the line from left to right edge
-        const plotElement = document.getElementById("plot-container");
-        if (!plotElement || !window.Plotly) return;
-
-        try {
-          const gd = plotElement as any;
-          if (!gd._fullLayout || !gd._fullLayout.xaxis) return;
-
-          // Get the current x-axis range
-          const xRange = gd._fullLayout.xaxis.range;
-          const leftEdge = xRange[0];
-          const rightEdge = xRange[1];
-
-          // Create the horizontal line spanning the entire chart width
-          const newLine: SimpleLine = {
-            type: "line",
-            x0: leftEdge,
-            y0: point.y,
-            x1: rightEdge,
-            y1: point.y,
-            color: "rgb(0, 0, 255)",
-            width: 2,
-          };
-
-          // Add the new line to our shapes array
-          setShapes((prev) => [...prev, newLine]);
-
-          // Update the plot with all shapes
-          const plotShapes = [...shapes, newLine]
-            .map((shape) => {
-              if (shape.type === "line") {
-                return {
-                  type: "line",
-                  x0: shape.x0,
-                  y0: shape.y0,
-                  x1: shape.x1,
-                  y1: shape.y1,
-                  line: {
-                    color: shape.color,
-                    width: shape.width,
-                  },
-                };
-              } else if (shape.type === "rect") {
-                return {
-                  type: "rect",
-                  x0: shape.x0,
-                  y0: shape.y0,
-                  x1: shape.x1,
-                  y1: shape.y1,
-                  line: {
-                    color: shape.color,
-                    width: shape.width,
-                  },
-                  fillcolor: shape.fillcolor || "rgba(0, 0, 255, 0.1)",
-                  opacity: shape.opacity || 0.2,
-                };
-              }
-              return null;
-            })
-            .filter(Boolean);
-
-          window.Plotly.relayout(plotElement, { shapes: plotShapes });
-        } catch (error) {
-          console.error("Error drawing horizontal line:", error);
-        }
-      } else {
-        handlePlotEvent(event);
-      }
+      console.log(`Clicked at:`, point);
+      handlePlotEvent(event);
     },
-    [
-      selectedTool,
-      isDrawing,
-      startPoint,
-      shapes,
-      extractPointFromEvent,
-      handlePlotEvent,
-    ]
+    [extractPointFromEvent, handlePlotEvent]
   );
-
-  // Generate shapes for the chart layout
-  const generateShapes = useCallback(() => {
-    const plotShapes = shapes
-      .map((shape) => {
-        if (shape.type === "line") {
-          return {
-            type: "line",
-            x0: shape.x0,
-            y0: shape.y0,
-            x1: shape.x1,
-            y1: shape.y1,
-            line: {
-              color: shape.color,
-              width: shape.width,
-            },
-          };
-        } else if (shape.type === "rect") {
-          return {
-            type: "rect",
-            x0: shape.x0,
-            y0: shape.y0,
-            x1: shape.x1,
-            y1: shape.y1,
-            line: {
-              color: shape.color,
-              width: shape.width,
-            },
-            fillcolor: shape.fillcolor || "rgba(0, 0, 255, 0.1)",
-            opacity: shape.opacity || 0.2,
-          };
-        }
-        return null;
-      })
-      .filter(Boolean);
-
-    // Add active shape if drawing
-    if (isDrawing && startPoint && endPoint) {
-      if (selectedTool === "line") {
-        plotShapes.push({
-          type: "line",
-          x0: startPoint.x,
-          y0: startPoint.y,
-          x1: endPoint.x,
-          y1: endPoint.y,
-          line: {
-            color: "rgb(255, 0, 0)", // Red for active line
-            width: 2,
-          },
-        });
-      } else if (selectedTool === "rectangle") {
-        plotShapes.push({
-          type: "rect",
-          x0: startPoint.x,
-          y0: startPoint.y,
-          x1: endPoint.x,
-          y1: endPoint.y,
-          line: {
-            color: "rgb(255, 0, 0)", // Red for active rectangle
-            width: 2,
-          },
-          fillcolor: "rgba(255, 0, 0, 0.1)",
-          opacity: 0.2,
-        });
-      }
-    }
-
-    return plotShapes;
-  }, [shapes, isDrawing, startPoint, endPoint, selectedTool]);
 
   // Add event listener for relayout events to keep subplot axes in sync
   useEffect(() => {
@@ -946,34 +505,6 @@ export default function CandlestickChart({
     }
   }, [indicatorConfigs, data.length]);
 
-  // Add a new state for the configuration dialog open state
-  const [configDialogOpen, setConfigDialogOpen] = useState(false);
-
-  // Handle saving indicator configuration
-  const handleIndicatorConfigSave = (
-    indicatorId: string,
-    newParams: Record<string, any>
-  ) => {
-    console.log("Saving config for:", indicatorId, "New params:", newParams);
-
-    // Update the indicator configuration
-    setIndicatorConfigs((prev) => {
-      const updated = {
-        ...prev,
-        [indicatorId]: {
-          ...prev[indicatorId],
-          ...newParams,
-        },
-      };
-      console.log("Updated configs:", updated);
-      return updated;
-    });
-
-    // Force chart update
-    setChartKey((prev) => prev + 1);
-    setConfigDialogOpen(false);
-  };
-
   return (
     <Card className={`w-full ${darkMode ? "dark bg-gray-900 text-white" : ""}`}>
       <CardHeader className="p-0">
@@ -1036,7 +567,19 @@ export default function CandlestickChart({
                   data={generatePlotData({
                     data,
                     selectedIndicators,
-                    indicatorConfigs,
+                    indicatorConfigs: Object.fromEntries(
+                      selectedIndicators.map((id) => [
+                        id,
+                        indicatorConfigs[id] ||
+                          INDICATOR_CONFIGS[id]?.defaultParams.reduce(
+                            (acc, param) => ({
+                              ...acc,
+                              [param.name]: param.value,
+                            }),
+                            {}
+                          ),
+                      ])
+                    ),
                     darkMode,
                     orders,
                     positions,
@@ -1056,14 +599,12 @@ export default function CandlestickChart({
                       activeLine: null, // Remove activeLine from here
                       subplotHeights: subplotHeights || [],
                     }),
-                    shapes: generateShapes(), // This is the key change - add shapes directly to the layout
+                    // shapes: generateShapes(), // This is the key change - add shapes directly to the layout
                     showlegend: false, // Hide the default Plotly legend
                   }}
                   config={{
                     ...generateChartConfig(),
-                    dragmode: ["line", "rectangle"].includes(selectedTool)
-                      ? "select"
-                      : "pan",
+                    dragmode: selectedTool ? "select" : "pan",
                   }}
                   style={{
                     width: "100%",
@@ -1071,20 +612,11 @@ export default function CandlestickChart({
                   }}
                   useResizeHandler
                   onClick={handleClick}
+                  // onClick={() => console.log("click")}
                   onMouseMove={handleMouseMove}
                   onRightClick={(event) => {
                     event.preventDefault();
-                    if (
-                      (selectedTool === "line" ||
-                        selectedTool === "rectangle") &&
-                      isDrawing
-                    ) {
-                      setIsDrawing(false);
-                      setStartPoint(null);
-                      setEndPoint(null);
-                    } else {
-                      handlePlotEvent(event);
-                    }
+                    handlePlotEvent(event);
                   }}
                   divId="plot-container"
                 />
