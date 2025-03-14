@@ -1,9 +1,5 @@
-import { Indicator, type Trace } from "../base/base-indicator";
+import { Indicator, IndicatorParameter, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
-  IndicatorParameter,
-} from "../base/configurable-indicator";
 
 interface RenkoLevel {
   time: string;
@@ -16,7 +12,7 @@ interface RenkoState {
   trend: ("up" | "down")[];
 }
 
-export class RenkoIndicator extends Indicator implements ConfigurableIndicator {
+export class RenkoIndicator extends Indicator {
   static readonly indicatorName = "Renko";
   static readonly config = { subplot: false };
   static readonly defaultParams: IndicatorParameter[] = [

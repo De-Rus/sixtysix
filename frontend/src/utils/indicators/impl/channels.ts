@@ -1,9 +1,5 @@
-import { Indicator, type Trace } from "../base/base-indicator";
+import { Indicator, IndicatorParameter, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
-  IndicatorParameter,
-} from "../base/configurable-indicator";
 
 interface Point {
   index: number;
@@ -32,10 +28,7 @@ interface ChannelsResult {
   channels: Channel[];
 }
 
-export class ChannelsIndicator
-  extends Indicator
-  implements ConfigurableIndicator
-{
+export class ChannelsIndicator extends Indicator {
   static readonly indicatorName = "Trend Channels";
   static readonly defaultParams: IndicatorParameter[] = [
     {

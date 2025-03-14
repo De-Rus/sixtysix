@@ -1,9 +1,5 @@
-import { Indicator, type Trace } from "../base/base-indicator";
+import { Indicator, IndicatorParameter, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
-  IndicatorParameter,
-} from "../base/configurable-indicator";
 
 interface FibonacciLevel {
   level: number;
@@ -18,10 +14,7 @@ interface FibonacciResult {
   lowPoint: { price: number; time: string };
 }
 
-export class FibonacciIndicator
-  extends Indicator
-  implements ConfigurableIndicator
-{
+export class FibonacciIndicator extends Indicator {
   static readonly indicatorName = "Fibonacci Retracement";
   static readonly defaultParams: IndicatorParameter[] = [
     {
@@ -190,6 +183,7 @@ export class FibonacciIndicator
       // Add labels if enabled
       if (this.showLabels) {
         traces.push({
+          name: `Fib ${(level.level * 100).toFixed(1)}%`,
           x: [endTime],
           y: [level.price],
           type: "scatter",

@@ -1,9 +1,10 @@
-import { Indicator, IndicatorConfig, type Trace } from "../base/base-indicator";
-import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
+import {
+  Indicator,
+  IndicatorConfig,
   IndicatorParameter,
-} from "../base/configurable-indicator";
+  type Trace,
+} from "../base/indicator";
+import type { DataPoint } from "../../../types/chart-types";
 
 interface MACDResult {
   macd: number[];
@@ -11,7 +12,7 @@ interface MACDResult {
   histogram: number[];
 }
 
-export class MACDIndicator extends Indicator implements ConfigurableIndicator {
+export class MACDIndicator extends Indicator {
   static readonly indicatorName = "MACD";
   static readonly config: IndicatorConfig = {
     subplot: true,

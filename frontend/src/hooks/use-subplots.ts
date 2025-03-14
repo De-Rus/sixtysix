@@ -6,13 +6,6 @@ export interface SubplotHeight {
   id: string
   height: number
 }
-
-// Constants for chart layout
-const SUBPLOT_HEIGHT_PERCENTAGE = 0.3 // 30% of total height per subplot
-
-/**
- * Hook to manage subplot heights
- */
 export function useSubplotHeights(selectedIndicators: string[]) {
   const [isDraggingSubplot, setIsDraggingSubplot] = useState(false)
 

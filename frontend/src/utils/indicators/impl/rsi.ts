@@ -1,15 +1,11 @@
-import { Indicator, type Trace } from "../base/base-indicator";
+import { Indicator, IndicatorParameter, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
-  IndicatorParameter,
-} from "../base/configurable-indicator";
 
 interface RSIResult {
   values: number[];
 }
 
-export class RSIIndicator extends Indicator implements ConfigurableIndicator {
+export class RSIIndicator extends Indicator {
   static readonly indicatorName = "RSI";
   static readonly config = {
     subplot: true,

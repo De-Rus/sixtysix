@@ -1,9 +1,5 @@
-import { Indicator, type Trace } from "../base/base-indicator";
+import { Indicator, IndicatorParameter, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
-  IndicatorParameter,
-} from "../base/configurable-indicator";
 
 interface IchimokuData {
   tenkan: (number | null)[];
@@ -15,11 +11,8 @@ interface IchimokuData {
   futureSenkouB: (number | null)[];
 }
 
-export class IchimokuIndicator
-  extends Indicator
-  implements ConfigurableIndicator
-{
-  static readonly indicatorName = "Ichimoku Cloud"; // Changed from 'name' to 'indicatorName'
+export class IchimokuIndicator extends Indicator {
+  static readonly indicatorName = "Ichimoku Cloud";
   static readonly defaultParams: IndicatorParameter[] = [
     {
       name: "tenkanPeriod",
@@ -129,83 +122,6 @@ export class IchimokuIndicator
     this.senkouPeriod = senkouPeriod;
     this.chikouOffset = chikouOffset;
     this.colors = colors;
-  }
-
-  getParameters(): IndicatorParameter[] {
-    return [
-      {
-        name: "tenkanPeriod",
-        type: "number",
-        label: "Tenkan-sen Period",
-        value: this.tenkanPeriod,
-        min: 1,
-        max: 100,
-        step: 1,
-      },
-      {
-        name: "kijunPeriod",
-        type: "number",
-        label: "Kijun-sen Period",
-        value: this.kijunPeriod,
-        min: 1,
-        max: 100,
-        step: 1,
-      },
-      {
-        name: "senkouPeriod",
-        type: "number",
-        label: "Senkou Span B Period",
-        value: this.senkouPeriod,
-        min: 1,
-        max: 100,
-        step: 1,
-      },
-      {
-        name: "chikouOffset",
-        type: "number",
-        label: "Chikou Span Offset",
-        value: this.chikouOffset,
-        min: 1,
-        max: 100,
-        step: 1,
-      },
-      {
-        name: "tenkanColor",
-        type: "color",
-        label: "Tenkan-sen Color",
-        value: this.colors.tenkan,
-      },
-      {
-        name: "kijunColor",
-        type: "color",
-        label: "Kijun-sen Color",
-        value: this.colors.kijun,
-      },
-      {
-        name: "senkouAColor",
-        type: "color",
-        label: "Senkou Span A Color",
-        value: this.colors.senkouA,
-      },
-      {
-        name: "senkouBColor",
-        type: "color",
-        label: "Senkou Span B Color",
-        value: this.colors.senkouB,
-      },
-      {
-        name: "chikouColor",
-        type: "color",
-        label: "Chikou Span Color",
-        value: this.colors.chikou,
-      },
-      {
-        name: "cloudColor",
-        type: "color",
-        label: "Cloud Color",
-        value: this.colors.cloud,
-      },
-    ];
   }
 
   setParameters(params: Record<string, any>): void {

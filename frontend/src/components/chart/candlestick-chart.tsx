@@ -5,15 +5,13 @@ import Plot from "react-plotly.js";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { ChartProps, DataPoint } from "../../types/chart-types";
 import { ChartToolbar } from "./chart-toolbar";
-import { generateData } from "@/utils/indicator-calculations";
-import { mockStocks } from "@/utils/mock-stocks";
+import { mockStocks } from "@/mocks/mock-stocks";
 import type { Order, Position } from "@/types/trading-types";
 import { OrderContextMenu } from "../trading/order-context-menu";
-import { getAxisRange, getMouseEventData } from "@/utils/chart-utils";
-import { useSubplotHeights, useSubplotRanges } from "@/utils/chart-subplots";
-import { generateChartLayout, generateChartConfig } from "@/utils/chart-layout";
-import { generatePlotData } from "@/utils/chart-indicators";
-import { ChartDragZone } from "../chart-drag-zone";
+import { getAxisRange, getMouseEventData } from "@/utils/chart/chart-utils";
+import { useSubplotHeights, useSubplotRanges } from "@/hooks/use-subplots";
+import { generatePlotData } from "@/utils/chart/indicators";
+import { ChartDragZone } from "./chart-drag-zone";
 import { Legend } from "@/components/chart/custom-legend";
 
 // Add this import at the top of the file
@@ -259,6 +257,8 @@ import type {
   SimpleRectangle,
   SimpleShape,
 } from "@/types/shape-types";
+import { generateChartConfig, generateChartLayout } from "@/utils/chart/layout";
+import { generateData } from "@/utils/mock";
 
 export default function CandlestickChart({
   data: initialData,
@@ -1190,9 +1190,6 @@ export default function CandlestickChart({
           }}
           configureIndicator={configureIndicator}
           onConfigureIndicator={setConfigureIndicator}
-          configDialog={configDialog}
-          onConfigDialog={setConfigDialog}
-          onConfigSave={handleIndicatorConfigSave}
         />
       </CardHeader>
       <CardContent className="p-0 relative">

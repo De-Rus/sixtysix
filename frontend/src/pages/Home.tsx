@@ -3,14 +3,14 @@
 import { FC, useState } from "react";
 import CandlestickChart from "@/components/chart/candlestick-chart";
 import { Watchlist } from "@/components/watchlist";
-import { DrawingToolbar } from "@/components/drawing-toolbar";
+import { DrawingToolbar } from "@/components/drawing/drawing-toolbar";
 import type { Order, Trade, Position } from "@/types/trading-types";
-import { DataPoint } from "@/types";
 import { useSymbol } from "@/hooks/use-symbol";
 import StockHeader from "@/components/stock-header";
-import AdvancedChartTools from "@/components/advanced-chart-tools";
+import AdvancedChartTools from "@/components/drawing/advanced-chart-tools";
 import { TradingPanel } from "@/components/trading/trading-panel";
 import { TradeEntryDialog } from "@/components/trading/trade-entry-dialog";
+import { DataPoint } from "@/types/chart-types";
 
 // Updated sample data for better visualization
 const sampleTrades: Trade[] = [

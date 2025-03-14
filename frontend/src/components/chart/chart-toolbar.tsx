@@ -41,7 +41,7 @@ import {
   SupertrendIndicator,
   TrendlineIndicator,
 } from "@/utils/indicators";
-import { searchStocks, type StockSymbol } from "@/utils/mock-stocks";
+import { searchStocks, type StockSymbol } from "@/mocks/mock-stocks";
 import { BarChart3, ChevronDown, LineChart, Plus, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { IndicatorConfigDialog } from "../indicator-config-dialog";

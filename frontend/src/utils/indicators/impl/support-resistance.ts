@@ -1,4 +1,4 @@
-import { Indicator, type Trace } from "../base/base-indicator";
+import { Indicator, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
 
 interface PriceLevel {

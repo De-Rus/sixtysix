@@ -1,9 +1,5 @@
-import { Indicator, type Trace } from "../base/base-indicator";
+import { Indicator, IndicatorParameter, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
-  IndicatorParameter,
-} from "../base/configurable-indicator";
 
 interface SupertrendResult {
   trend: (1 | -1 | null)[]; // 1 for uptrend, -1 for downtrend
@@ -12,10 +8,7 @@ interface SupertrendResult {
   lowerBand: (number | null)[];
 }
 
-export class SupertrendIndicator
-  extends Indicator
-  implements ConfigurableIndicator
-{
+export class SupertrendIndicator extends Indicator {
   static readonly indicatorName = "Supertrend";
   static readonly defaultParams: IndicatorParameter[] = [
     {
@@ -74,7 +67,7 @@ export class SupertrendIndicator
     return SupertrendIndicator.defaultParams;
   }
 
-  setParameters(params: Record<string, any>): void {
+  setParameters(params: Record<string, IndicatorParameter["value"]>): void {
     if (params.period) this.period = params.period;
     if (params.multiplier) this.multiplier = params.multiplier;
     if (params.upColor) this.upColor = params.upColor;

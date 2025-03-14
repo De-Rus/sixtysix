@@ -1,10 +1,9 @@
-import type { Line } from "./chart-drawing-tools"
-import type { DataPoint } from "../types/chart-types"
+import { DataPoint, Line } from "@/types/chart-types";
 
 // Constants for chart layout
-const SUBPLOT_HEIGHT_PERCENTAGE = 0.3 // 30% of total height per subplot
-const XAXIS_HEIGHT_PERCENTAGE = 0.08 // Increased from 0.05 to 0.08 (8% height for x-axis)
-const MAIN_CHART_BOTTOM_MARGIN_PERCENTAGE = 0.05 // Increased from 0.03 to 0.05 (5% margin)
+const SUBPLOT_HEIGHT_PERCENTAGE = 0.3; // 30% of total height per subplot
+const XAXIS_HEIGHT_PERCENTAGE = 0.08; // Increased from 0.05 to 0.08 (8% height for x-axis)
+const MAIN_CHART_BOTTOM_MARGIN_PERCENTAGE = 0.05; // Increased from 0.03 to 0.05 (5% margin)
 
 /**
  * Generate the Plotly layout for the chart
@@ -19,31 +18,39 @@ export function generateChartLayout({
   activeLine,
   subplotHeights = [],
 }: {
-  darkMode: boolean
-  height: number
-  yAxisRange: [number, number] | null
-  xAxisRange: [string, string] | null
-  data: DataPoint[]
-  lines: Line[]
-  activeLine: Line | null
-  subplotHeights?: { id: string; height: number }[]
+  darkMode: boolean;
+  height: number;
+  yAxisRange: [number, number] | null;
+  xAxisRange: [string, string] | null;
+  data: DataPoint[];
+  lines: Line[];
+  activeLine: Line | null;
+  subplotHeights?: { id: string; height: number }[];
 }) {
   // Calculate domain for main chart and subplots
-  const hasSubplots = subplotHeights.length > 0
+  const hasSubplots = subplotHeights.length > 0;
 
   // Calculate the total height percentage taken by subplots
-  const totalSubplotPercentage = subplotHeights.length * SUBPLOT_HEIGHT_PERCENTAGE
+  const totalSubplotPercentage =
+    subplotHeights.length * SUBPLOT_HEIGHT_PERCENTAGE;
 
   // Calculate main chart height (remaining space after subplots, x-axis, and margin)
   const mainChartPercentage = hasSubplots
-    ? Math.max(0.1, 1 - totalSubplotPercentage - XAXIS_HEIGHT_PERCENTAGE - MAIN_CHART_BOTTOM_MARGIN_PERCENTAGE)
-    : 1 - XAXIS_HEIGHT_PERCENTAGE - MAIN_CHART_BOTTOM_MARGIN_PERCENTAGE
+    ? Math.max(
+        0.1,
+        1 -
+          totalSubplotPercentage -
+          XAXIS_HEIGHT_PERCENTAGE -
+          MAIN_CHART_BOTTOM_MARGIN_PERCENTAGE
+      )
+    : 1 - XAXIS_HEIGHT_PERCENTAGE - MAIN_CHART_BOTTOM_MARGIN_PERCENTAGE;
 
   // Convert to domain values (0-1 range)
-  const mainChartDomainStart = 1 - mainChartPercentage
-  const mainChartDomainEnd = 1
-  const mainChartBottomMarginStart = mainChartDomainStart - MAIN_CHART_BOTTOM_MARGIN_PERCENTAGE
-  const xAxisPosition = mainChartBottomMarginStart
+  const mainChartDomainStart = 1 - mainChartPercentage;
+  const mainChartDomainEnd = 1;
+  const mainChartBottomMarginStart =
+    mainChartDomainStart - MAIN_CHART_BOTTOM_MARGIN_PERCENTAGE;
+  const xAxisPosition = mainChartBottomMarginStart;
 
   // Base layout
   const baseLayout: any = {
@@ -56,7 +63,9 @@ export function generateChartLayout({
       zeroline: false,
       rangeslider: { visible: false },
       color: darkMode ? "rgba(255, 255, 255, 0.8)" : "rgba(0, 0, 0, 0.8)",
-      range: xAxisRange || (data.length ? [data[0].time, data[data.length - 1].time] : undefined),
+      range:
+        xAxisRange ||
+        (data.length ? [data[0].time, data[data.length - 1].time] : undefined),
       showspikes: false,
       domain: [0, 1], // Full width
       anchor: "y",
@@ -123,7 +132,7 @@ export function generateChartLayout({
         },
       },
     ],
-  }
+  };
 
   // Add subplot axes if needed
   if (hasSubplots) {
@@ -140,16 +149,17 @@ export function generateChartLayout({
         color: darkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)",
         width: 1,
       },
-    })
+    });
 
     // Create each subplot with 30% height
     subplotHeights.forEach((subplot, index) => {
-      const axisNumber = index + 2 // yaxis2, yaxis3, etc.
+      const axisNumber = index + 2; // yaxis2, yaxis3, etc.
 
       // Calculate domain for this subplot (from bottom to top)
       // Each subplot is 30% of the total height
-      const domainEnd = mainChartBottomMarginStart - index * SUBPLOT_HEIGHT_PERCENTAGE
-      const domainStart = domainEnd - SUBPLOT_HEIGHT_PERCENTAGE
+      const domainEnd =
+        mainChartBottomMarginStart - index * SUBPLOT_HEIGHT_PERCENTAGE;
+      const domainStart = domainEnd - SUBPLOT_HEIGHT_PERCENTAGE;
 
       // Add x-axis for this subplot
       baseLayout[`xaxis${axisNumber}`] = {
@@ -167,7 +177,7 @@ export function generateChartLayout({
         matches: "x",
         scaleanchor: "x",
         fixedrange: false,
-      }
+      };
 
       // Add y-axis for this subplot
       baseLayout[`yaxis${axisNumber}`] = {
@@ -186,7 +196,7 @@ export function generateChartLayout({
         linecolor: darkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)",
         linewidth: 1,
         fixedrange: false,
-      }
+      };
 
       // Add a border line at the top of each subplot
       if (index < subplotHeights.length - 1) {
@@ -202,12 +212,12 @@ export function generateChartLayout({
             color: darkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)",
             width: 1,
           },
-        })
+        });
       }
-    })
+    });
   }
 
-  return baseLayout
+  return baseLayout;
 }
 
 /**
@@ -233,6 +243,5 @@ export function generateChartConfig() {
       annotationText: false,
     },
     hovermode: "x unified",
-  }
+  };
 }
-

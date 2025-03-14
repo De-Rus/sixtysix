@@ -1,9 +1,10 @@
-import { Indicator, IndicatorConfig, type Trace } from "../base/base-indicator";
-import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
+import {
+  Indicator,
+  IndicatorConfig,
   IndicatorParameter,
-} from "../base/configurable-indicator";
+  type Trace,
+} from "../base/indicator";
+import type { DataPoint } from "../../../types/chart-types";
 
 interface SqueezeResult {
   momentum: number[];
@@ -13,10 +14,7 @@ interface SqueezeResult {
   direction: ("up" | "down")[];
 }
 
-export class SqueezeMomentumIndicator
-  extends Indicator
-  implements ConfigurableIndicator
-{
+export class SqueezeMomentumIndicator extends Indicator {
   static readonly indicatorName = "Squeeze Momentum";
   static readonly config: IndicatorConfig = {
     subplot: true,

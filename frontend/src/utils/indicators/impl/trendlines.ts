@@ -1,10 +1,5 @@
-import { DataPoint } from "@/types";
-import {
-  ConfigurableIndicator,
-  Indicator,
-  IndicatorParameter,
-  Trace,
-} from "../base";
+import { DataPoint } from "@/types/chart-types";
+import { Indicator, IndicatorParameter, Trace } from "../base";
 
 interface TrendPoint {
   index: number;
@@ -25,10 +20,7 @@ interface TrendlineResult {
   pivotPoints: TrendPoint[];
 }
 
-export class TrendlineIndicator
-  extends Indicator
-  implements ConfigurableIndicator
-{
+export class TrendlineIndicator extends Indicator {
   static readonly indicatorName = "Trendlines";
   static readonly defaultParams: IndicatorParameter[] = [
     {

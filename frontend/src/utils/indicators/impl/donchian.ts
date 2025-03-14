@@ -1,9 +1,5 @@
-import { Indicator, type Trace } from "../base/base-indicator";
+import { Indicator, IndicatorParameter, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
-  IndicatorParameter,
-} from "../base/configurable-indicator";
 
 interface DonchianResult {
   upper: (number | null)[];
@@ -11,10 +7,7 @@ interface DonchianResult {
   lower: (number | null)[];
 }
 
-export class DonchianChannelsIndicator
-  extends Indicator
-  implements ConfigurableIndicator
-{
+export class DonchianChannelsIndicator extends Indicator {
   static readonly indicatorName = "Donchian Channels";
   static readonly defaultParams: IndicatorParameter[] = [
     {

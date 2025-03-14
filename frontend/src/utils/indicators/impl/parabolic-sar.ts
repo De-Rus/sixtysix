@@ -1,19 +1,12 @@
-import { Indicator, type Trace } from "../base/base-indicator";
+import { Indicator, IndicatorParameter, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
-  IndicatorParameter,
-} from "../base/configurable-indicator";
 
 interface SARResult {
   values: (number | null)[];
   trends: ("up" | "down")[];
 }
 
-export class ParabolicSARIndicator
-  extends Indicator
-  implements ConfigurableIndicator
-{
+export class ParabolicSARIndicator extends Indicator {
   static readonly indicatorName = "Parabolic SAR";
   static readonly defaultParams: IndicatorParameter[] = [
     {

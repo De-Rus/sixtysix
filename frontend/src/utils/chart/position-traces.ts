@@ -1,6 +1,6 @@
 import type { Position } from "@/types/trading-types";
 import type { DataPoint } from "@/types/chart-types";
-import type { Trace } from "@/utils/indicators/base/base-indicator";
+import type { Trace } from "@/utils/indicators/base/indicator";
 
 export function generatePositionTraces(
   positions: Position[],

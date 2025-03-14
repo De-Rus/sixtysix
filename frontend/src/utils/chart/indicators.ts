@@ -1,6 +1,6 @@
-import type { DataPoint } from "../types/chart-types";
-import type { Order, Position } from "../types/trading-types";
-import { ConfigurableIndicator, IchimokuIndicator } from "../utils/indicators";
+import type { DataPoint } from "../../types/chart-types";
+import type { Order, Position } from "../../types/trading-types";
+import { IchimokuIndicator } from "../indicators";
 import {
   ADXIndicator,
   BollingerBandsIndicator,
@@ -17,16 +17,13 @@ import {
   SupertrendIndicator,
   SupportResistanceIndicator,
   TrendlineIndicator,
-} from "./indicators";
-import type { Indicator, Trace } from "./indicators/base/base-indicator";
-import { MACDIndicator } from "./indicators/impl/macd";
-import { RenkoIndicator } from "./indicators/impl/renko";
+} from "../indicators";
+import type { Indicator, Trace } from "../indicators/base/indicator";
+import { MACDIndicator } from "../indicators/impl/macd";
+import { RenkoIndicator } from "../indicators/impl/renko";
 import { generateOrderTraces } from "./order-traces";
 import { generatePositionTraces } from "./position-traces";
 
-/**
- * Generate all plot data for the chart
- */
 export function generatePlotData({
   data,
   selectedIndicators,
@@ -39,8 +36,8 @@ export function generatePlotData({
   selectedIndicators: string[];
   indicatorConfigs: Record<string, Record<string, any>>;
   darkMode: boolean;
-  orders?: Order[];
-  positions?: Position[];
+  orders: Order[];
+  positions: Position[];
 }): any[] {
   console.log("Generating plot data with configs:", indicatorConfigs);
   if (!data.length) return [];
@@ -165,12 +162,8 @@ export function generatePlotData({
     }
 
     if (indicator) {
-      // Set any custom configuration
-      if ("setParameters" in indicator) {
-        (indicator as ConfigurableIndicator).setParameters(config);
-      }
+      indicator.setParameters(config);
 
-      // Get the indicator's traces
       const traces = indicator.generateTraces();
 
       // Add hoverinfo: "none" to all indicator traces
@@ -178,7 +171,6 @@ export function generatePlotData({
         trace.hoverinfo = "none";
       });
 
-      // Add traces to appropriate array based on indicator config
       const indicatorConfig = (
         indicator.constructor as typeof Indicator
       ).getConfig();

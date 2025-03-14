@@ -1,9 +1,5 @@
-import { Indicator, type Trace } from "../base/base-indicator";
+import { Indicator, IndicatorParameter, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
-  IndicatorParameter,
-} from "../base/configurable-indicator";
 
 interface WavePoint {
   index: number;
@@ -19,10 +15,7 @@ interface ElliottWaveResult {
   currentCycle: "impulse" | "corrective";
 }
 
-export class ElliottWaveIndicator
-  extends Indicator
-  implements ConfigurableIndicator
-{
+export class ElliottWaveIndicator extends Indicator {
   static readonly indicatorName = "Elliott Wave";
   static readonly defaultParams: IndicatorParameter[] = [
     {
@@ -271,6 +264,7 @@ export class ElliottWaveIndicator
     if (this.showLabels) {
       waves.forEach((wave) => {
         traces.push({
+          name: "Wave Label",
           x: [wave.time],
           y: [wave.price],
           type: "scatter",

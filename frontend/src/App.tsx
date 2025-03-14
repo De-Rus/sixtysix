@@ -1,7 +1,7 @@
 import { Home } from "./pages/Home";
 import { SymbolProvider } from "./providers/symbol";
-import { generateData } from "./utils";
 import { useSymbol } from "./hooks/use-symbol";
+import { generateData } from "./utils/mock/mock-data-generator";
 
 export const AppContent = () => {
   const { currentSymbol } = useSymbol();

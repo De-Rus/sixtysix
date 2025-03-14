@@ -1,9 +1,5 @@
-import { Indicator, type Trace } from "../base/base-indicator";
+import { Indicator, IndicatorParameter, type Trace } from "../base/indicator";
 import type { DataPoint } from "../../../types/chart-types";
-import type {
-  ConfigurableIndicator,
-  IndicatorParameter,
-} from "../base/configurable-indicator";
 
 interface ADXResult {
   adx: (number | null)[]; // Average Directional Index
@@ -11,7 +7,7 @@ interface ADXResult {
   minusDI: (number | null)[]; // Negative Directional Indicator
 }
 
-export class ADXIndicator extends Indicator implements ConfigurableIndicator {
+export class ADXIndicator extends Indicator {
   static readonly indicatorName = "ADX/DI";
   static readonly config = {
     subplot: true,
@@ -77,10 +73,6 @@ export class ADXIndicator extends Indicator implements ConfigurableIndicator {
     this.plusDIColor = plusDIColor;
     this.minusDIColor = minusDIColor;
     this.strongTrend = strongTrend;
-  }
-
-  getParameters(): IndicatorParameter[] {
-    return ADXIndicator.defaultParams;
   }
 
   setParameters(params: Record<string, any>): void {

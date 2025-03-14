@@ -1,5 +1,5 @@
 import type { Order } from "@/types/trading-types";
-import type { Trace } from "./indicators/base/base-indicator";
+import type { Trace } from "../indicators/base/indicator";
 import type { DataPoint } from "@/types/chart-types";
 
 export function generateOrderTraces(
