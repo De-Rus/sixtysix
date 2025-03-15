@@ -33,7 +33,6 @@ interface HomeContentProps {
 export const Home: FC<HomeContentProps> = ({ data }) => {
   const [activeTool, setActiveTool] = useState("select");
   const { currentSymbol, setCurrentSymbol } = useSymbol();
-  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [tradeDialog, setTradeDialog] = useState<{
     isOpen: boolean;
     price?: number;
@@ -148,10 +147,6 @@ export const Home: FC<HomeContentProps> = ({ data }) => {
     console.log("Chaning current symbol", symbol);
   };
 
-  const handleToggleAdvancedTools = () => {
-    setShowAdvancedTools(!showAdvancedTools);
-  };
-
   return (
     <div className="flex flex-col w-full bg-background">
       <div className="border-b">
@@ -188,7 +183,6 @@ export const Home: FC<HomeContentProps> = ({ data }) => {
           <DrawingToolbar
             activeTool={activeTool}
             onToolChange={handleToolChange}
-            onToggleAdvancedTools={handleToggleAdvancedTools}
           />
         </div>
         <div className="w-full flex flex-col gap-4">
@@ -220,13 +214,6 @@ export const Home: FC<HomeContentProps> = ({ data }) => {
         <div className="border-l px-4">
           <Watchlist onSymbolSelect={handleSymbolSelect} />
         </div>
-        {showAdvancedTools && (
-          <AdvancedChartTools
-            onToolSelect={handleToolChange}
-            activeTool={activeTool}
-            isVisible={showAdvancedTools}
-          />
-        )}
       </div>
     </div>
   );

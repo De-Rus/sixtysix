@@ -58,14 +58,81 @@ const INDICATOR_CONFIGS = Object.fromEntries(
     )
 );
 
-import type {
-  SimpleLine,
-  SimpleRectangle,
-  SimpleShape,
-} from "@/types/shape-types";
 import { generateChartConfig, generateChartLayout } from "@/utils/chart/layout";
 import { generateData } from "@/utils/mock";
 import { indicatorRegistry } from "@/utils/indicators/registry";
+
+import { Button } from "@/components/ui/button";
+import {
+  Pencil,
+  PenLineIcon as StraightLine,
+  Square,
+  Circle,
+  Eraser,
+  Trash2,
+  MousePointer,
+} from "lucide-react";
+
+interface DrawingToolbarProps {
+  currentTool: string | null;
+  setCurrentTool: (tool: string | null) => void;
+  clearCanvas: () => void;
+}
+
+export function DrawingToolbar2({
+  currentTool,
+  setCurrentTool,
+  clearCanvas,
+}: DrawingToolbarProps) {
+  const tools = [
+    { id: "cursor", icon: MousePointer, label: "Cursor" },
+    { id: "line", icon: StraightLine, label: "Line" },
+    { id: "pencil", icon: Pencil, label: "Pencil" },
+    { id: "rectangle", icon: Square, label: "Rectangle" },
+    { id: "circle", icon: Circle, label: "Circle" },
+    { id: "eraser", icon: Eraser, label: "Eraser" },
+  ];
+
+  return (
+    <div className="flex items-center gap-1 p-2 bg-gray-800 border-b border-gray-700">
+      <div className="flex items-center gap-1 mr-4">
+        {tools.map((tool) => (
+          <Button
+            key={tool.id}
+            variant={currentTool === tool.id ? "default" : "outline"}
+            size="icon"
+            onClick={() => setCurrentTool(tool.id)}
+            title={tool.label}
+            className="h-8 w-8"
+          >
+            <tool.icon className="h-4 w-4" />
+          </Button>
+        ))}
+      </div>
+
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={clearCanvas}
+        title="Clear All"
+        className="h-8 w-8"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+interface Point {
+  x: number | string;
+  y: number;
+}
+
+interface Drawing {
+  type: string;
+  points: Point[];
+  color: string;
+  width: number;
+}
 
 export default function CandlestickChart({
   data: initialData,
@@ -108,10 +175,10 @@ export default function CandlestickChart({
 
   // Drawing state
   const [selectedTool, setSelectedTool] = useState<string>("cursor");
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [startPoint, setStartPoint] = useState<{ x: string; y: number } | null>(
-    null
-  );
+  // const [isDrawing, setIsDrawing] = useState(false);
+  // const [startPoint, setStartPoint] = useState<{ x: string; y: number } | null>(
+  //   null
+  // );
   const [endPoint, setEndPoint] = useState<{ x: string; y: number } | null>(
     null
   );
@@ -278,43 +345,6 @@ export default function CandlestickChart({
     return () => clearInterval(intervalId);
   }, [synchronizeAxes]);
 
-  // Add cursor style for better UX
-  useEffect(() => {
-    const chartElement = chartRef.current;
-    if (!chartElement) return;
-
-    // Remove all cursor classes first
-    chartElement.classList.remove("cursor-grab", "cursor-crosshair");
-
-    // Add appropriate cursor class based on selected tool
-    if (["line", "horizontal", "rectangle"].includes(selectedTool)) {
-      chartElement.classList.add("cursor-crosshair");
-    } else {
-      chartElement.classList.add("cursor-grab");
-    }
-
-    return () => {
-      chartElement.classList.remove("cursor-grab", "cursor-crosshair");
-    };
-  }, [selectedTool]);
-
-  // Add keyboard event listener for Escape key to cancel drawing
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isDrawing) {
-        console.log("Canceling drawing (Escape key)");
-        setIsDrawing(false);
-        setStartPoint(null);
-        setEndPoint(null);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isDrawing]);
-
   // Function to extract point from event
   const extractPointFromEvent = useCallback((event: any) => {
     if (!event || !event.points || event.points.length === 0) {
@@ -354,19 +384,47 @@ export default function CandlestickChart({
   }, []);
 
   // Handle mouse move for drawing
-  const handleMouseMove = useCallback(
-    (event: any) => {
-      // Extract point from event
-      const point = extractPointFromEvent(event);
-      if (!point) return;
+  // const handleMouseMove = useCallback(
+  //   (event: any) => {
+  //     // Extract point from event
+  //     const point = extractPointFromEvent(event);
+  //     if (!point) return;
 
-      // Always update current mouse position
-      setCurrentMousePosition(point);
-      handlePlotEvent(event);
-      console.log(`Mouse moved to:`, point);
-    },
-    [extractPointFromEvent, handlePlotEvent]
-  );
+  //     // Always update current mouse position
+  //     setCurrentMousePosition(point);
+  //     handlePlotEvent(event);
+  //     console.log(`Mouse moved to:`, point);
+  //   },
+  //   [extractPointFromEvent, handlePlotEvent]
+  // );
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDrawing.current || !currentTool || currentTool === "cursor") return;
+
+    const rect = canvas.getBoundingClientRect();
+    const canvasX = e.clientX - rect.left;
+    const canvasY = e.clientY - rect.top;
+
+    // Get the Plotly layout and yaxis
+    const plotlyNode = plotRef.current;
+    if (!plotlyNode || !plotlyNode.el) return;
+
+    const layout = plotlyNode.el._fullLayout;
+    const yaxis = layout.yaxis;
+
+    // Convert to data coordinates
+    const dataPoint = {
+      x: canvasToData(canvasX, canvasY).x,
+      y: yaxis.p2d(canvasY), // Use direct canvas Y coordinate
+    };
+
+    if (currentTool === "line") {
+      tempPoints.current = [dataPoint];
+    }
+
+    redrawCanvas();
+    e.preventDefault();
+  };
 
   // // Handle click for drawing
   const handleClick = useCallback(
@@ -505,6 +563,500 @@ export default function CandlestickChart({
     }
   }, [indicatorConfigs, data.length]);
 
+  // Begin test
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [currentTool, setCurrentTool] = useState<string | null>("cursor");
+
+  // Drawing state
+  const isDrawing = useRef(false);
+  const startPoint = useRef<Point | null>(null);
+  const drawings = useRef<Drawing[]>([]);
+  const tempPoints = useRef<Point[]>([]);
+
+  // Debug state
+  const [debugInfo, setDebugInfo] = useState<string>("");
+
+  // Get the plot area bounds (excluding margins)
+  const getPlotArea = () => {
+    if (!plotRef.current) return { left: 0, top: 0, width: 0, height: 0 };
+
+    try {
+      const plotlyNode = plotRef.current;
+      const layout = plotlyNode.el._fullLayout;
+
+      return {
+        left: layout.margin.l,
+        top: layout.margin.t,
+        width: layout.width - layout.margin.l - layout.margin.r,
+        height: layout.height - layout.margin.t - layout.margin.b,
+      };
+    } catch (error) {
+      console.error("Error getting plot area:", error);
+      return { left: 0, top: 0, width: 0, height: 0 };
+    }
+  };
+
+  // Convert canvas coordinates to data coordinates
+  // const canvasToData = (canvasX: number, canvasY: number): Point => {
+  //   if (!plotRef.current) return { x: 0, y: 0 };
+
+  //   try {
+  //     const plotlyNode = plotRef.current;
+  //     const layout = plotlyNode.el._fullLayout;
+  //     const xaxis = layout.xaxis;
+  //     const yaxis = layout.yaxis;
+  //     const plotArea = getPlotArea();
+
+  //     // For y-axis, calculate directly from the range
+  //     const yrange = yaxis.range;
+  //     const relY = (canvasY - plotArea.top) / plotArea.height;
+  //     const yInDataCoord = yrange[1] - relY * (yrange[1] - yrange[0]);
+
+  //     // For x-axis, calculate from the range
+  //     const xrange = xaxis.range;
+  //     const relX = (canvasX - plotArea.left) / plotArea.width;
+
+  //     // Get the current visible x-range as timestamps
+  //     const xmin = new Date(xrange[0]).getTime();
+  //     const xmax = new Date(xrange[1]).getTime();
+
+  //     // Calculate the timestamp at this position
+  //     const timestamp = xmin + relX * (xmax - xmin);
+
+  //     // Format as ISO string for consistency
+  //     const xValue = new Date(timestamp).toISOString();
+
+  //     return { x: xValue, y: yInDataCoord };
+  //   } catch (error) {
+  //     console.error("Error in canvasToData:", error);
+  //     return { x: 0, y: 0 };
+  //   }
+  // };
+  const canvasToData = (canvasX: number, canvasY: number): Point => {
+    if (!plotRef.current) return { x: 0, y: 0 };
+
+    try {
+      const plotlyNode = plotRef.current;
+      const layout = plotlyNode.el._fullLayout;
+      const xaxis = layout.xaxis;
+      const yaxis = layout.yaxis;
+      const plotArea = getPlotArea();
+
+      // For y-axis, use Plotly's built-in conversion
+      let yInDataCoord;
+      try {
+        // Convert pixel to data coordinates using Plotly's p2d function
+        yInDataCoord = yaxis.p2d(canvasY);
+      } catch (e) {
+        // Fallback to manual calculation if p2d fails
+        const yrange = yaxis.range;
+        const relY = (canvasY - plotArea.top) / plotArea.height;
+        yInDataCoord = yrange[1] - relY * (yrange[1] - yrange[0]);
+      }
+
+      // X-axis calculation remains the same
+      const xrange = xaxis.range;
+      const relX = (canvasX - plotArea.left) / plotArea.width;
+      const xmin = new Date(xrange[0]).getTime();
+      const xmax = new Date(xrange[1]).getTime();
+      const timestamp = xmin + relX * (xmax - xmin);
+      const xValue = new Date(timestamp).toISOString();
+
+      return { x: xValue, y: yInDataCoord };
+    } catch (error) {
+      console.error("Error in canvasToData:", error);
+      return { x: 0, y: 0 };
+    }
+  };
+
+  // Draw a line on the canvas
+  const drawLine = (
+    ctx: CanvasRenderingContext2D,
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    color: string,
+    width: number
+  ) => {
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = "round";
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+  };
+
+  // Redraw all drawings
+  // Redraw all drawings
+  const redrawCanvas = () => {
+    if (!canvasRef.current || !plotRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Get current plot area and axes
+    const plotArea = getPlotArea();
+    const layout = plotRef.current.el._fullLayout;
+    const xaxis = layout.xaxis;
+    const yaxis = layout.yaxis;
+
+    // Get current ranges
+    const xrange = xaxis.range;
+    const yrange = yaxis.range;
+
+    // Convert ranges to timestamps for x-axis
+    const xmin = new Date(xrange[0]).getTime();
+    const xmax = new Date(xrange[1]).getTime();
+
+    // Redraw all saved drawings
+    drawings.current.forEach((drawing, index) => {
+      try {
+        if (drawing.type === "line" && drawing.points.length >= 2) {
+          // Use Plotly's direct conversion for both points
+          const x1Time = new Date(drawing.points[0].x as string).getTime();
+          const x2Time = new Date(drawing.points[1].x as string).getTime();
+
+          const x1 =
+            plotArea.left + ((x1Time - xmin) / (xmax - xmin)) * plotArea.width;
+          const x2 =
+            plotArea.left + ((x2Time - xmin) / (xmax - xmin)) * plotArea.width;
+
+          const y1 = yaxis.d2p(drawing.points[0].y);
+          const y2 = yaxis.d2p(drawing.points[1].y);
+
+          // Draw the line
+          drawLine(ctx, x1, y1, x2, y2, drawing.color, drawing.width);
+        } else if (drawing.type === "pencil" && drawing.points.length >= 2) {
+          ctx.beginPath();
+          ctx.strokeStyle = drawing.color;
+          ctx.lineWidth = drawing.width;
+          ctx.lineCap = "round";
+
+          // Process each point using direct Plotly conversion
+          for (let i = 0; i < drawing.points.length; i++) {
+            const point = drawing.points[i];
+            const xTime = new Date(point.x as string).getTime();
+            const x =
+              plotArea.left + ((xTime - xmin) / (xmax - xmin)) * plotArea.width;
+            const y = yaxis.d2p(point.y);
+
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+
+          ctx.stroke();
+        }
+      } catch (error) {
+        console.error(`Error redrawing drawing ${index}:`, error);
+      }
+    });
+
+    // Draw temporary points for ongoing drawing
+    if (
+      isDrawing.current &&
+      startPoint.current &&
+      tempPoints.current.length > 0
+    ) {
+      try {
+        if (currentTool === "line") {
+          // Get canvas coordinates for start point
+          const startX =
+            plotArea.left +
+            ((new Date(startPoint.current.x as string).getTime() - xmin) /
+              (xmax - xmin)) *
+              plotArea.width;
+          const startY = yaxis.d2p(startPoint.current.y);
+
+          // Get canvas coordinates for end point
+          const endX =
+            plotArea.left +
+            ((new Date(tempPoints.current[0].x as string).getTime() - xmin) /
+              (xmax - xmin)) *
+              plotArea.width;
+          const endY = yaxis.d2p(tempPoints.current[0].y);
+
+          // Draw the line directly using canvas coordinates
+          drawLine(ctx, startX, startY, endX, endY, "#FFCC00", 2);
+        } else if (currentTool === "pencil" && tempPoints.current.length >= 2) {
+          ctx.beginPath();
+          ctx.strokeStyle = "#FFCC00";
+          ctx.lineWidth = 2;
+          ctx.lineCap = "round";
+
+          // Process each point using direct Plotly conversion
+          for (let i = 0; i < tempPoints.current.length; i++) {
+            const point = tempPoints.current[i];
+            const xTime = new Date(point.x as string).getTime();
+            const x =
+              plotArea.left + ((xTime - xmin) / (xmax - xmin)) * plotArea.width;
+            const y = yaxis.d2p(point.y);
+
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+
+          ctx.stroke();
+        }
+      } catch (error) {
+        console.error("Error drawing temporary points:", error);
+      }
+    }
+  };
+
+  // Modify the syncCanvasWithPlot function to include a small delay
+  // to ensure layout is fully updated
+  // Sync canvas with plot
+  const syncCanvasWithPlot = () => {
+    if (!canvasRef.current || !plotRef.current) return;
+
+    try {
+      const canvas = canvasRef.current;
+      const plotlyNode = plotRef.current;
+
+      if (plotlyNode && plotlyNode.el) {
+        const layout = plotlyNode.el._fullLayout;
+
+        // Set canvas dimensions to match plot
+        canvas.width = layout.width;
+        canvas.height = layout.height;
+
+        // Redraw canvas
+        redrawCanvas();
+      }
+    } catch (error) {
+      console.error("Error syncing canvas:", error);
+    }
+  };
+
+  // Plotly event handlers
+  const handlePlotInitialized = () => {
+    console.log("Plot initialized");
+    syncCanvasWithPlot();
+
+    // Add event listener for continuous panning/zooming
+    if (plotRef.current && plotRef.current.el) {
+      plotRef.current.el.on("plotly_relayouting", () => {
+        redrawCanvas();
+      });
+    }
+  };
+
+  const handlePlotResize = () => {
+    console.log("Plot resized");
+    syncCanvasWithPlot();
+  };
+
+  // Update the handlePlotRelayout function to ensure consistent redrawing
+  const handlePlotRelayout = (eventData: any) => {
+    console.log("Plot relayout");
+
+    // Add a small delay to ensure the chart has fully updated
+    requestAnimationFrame(() => {
+      syncCanvasWithPlot();
+    });
+  };
+
+  const handleMouseDownRef = useRef<(e: MouseEvent) => void>(() => {});
+  const handleMouseMoveRef = useRef<(e: MouseEvent) => void>(() => {});
+  const handleMouseUpRef = useRef<(e: MouseEvent) => void>(() => {});
+
+  // Direct DOM event handlers for drawing
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (!currentTool || currentTool === "cursor") return;
+
+      const rect = canvas.getBoundingClientRect();
+      const canvasX = e.clientX - rect.left;
+      const canvasY = e.clientY - rect.top;
+
+      // Get the Plotly layout
+      const plotlyNode = plotRef.current;
+      if (!plotlyNode || !plotlyNode.el) return;
+
+      // Convert to data coordinates directly using Plotly's conversion
+      const dataPoint = canvasToData(canvasX, canvasY);
+
+      console.log(
+        "Mouse down at canvas:",
+        canvasX,
+        canvasY,
+        "data:",
+        dataPoint
+      );
+
+      isDrawing.current = true;
+      startPoint.current = dataPoint;
+      tempPoints.current = [dataPoint];
+
+      e.preventDefault();
+      redrawCanvas();
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDrawing.current || !currentTool || currentTool === "cursor")
+        return;
+
+      const rect = canvas.getBoundingClientRect();
+      const canvasX = e.clientX - rect.left;
+      const canvasY = e.clientY - rect.top;
+
+      // Convert to data coordinates directly
+      const dataPoint = canvasToData(canvasX, canvasY);
+
+      if (currentTool === "pencil") {
+        tempPoints.current.push(dataPoint);
+      } else if (currentTool === "line") {
+        tempPoints.current = [dataPoint];
+      }
+
+      // Redraw
+      redrawCanvas();
+      e.preventDefault();
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (
+        !isDrawing.current ||
+        !currentTool ||
+        currentTool === "cursor" ||
+        !startPoint.current
+      )
+        return;
+
+      const rect = canvas.getBoundingClientRect();
+      const canvasX = e.clientX - rect.left;
+      const canvasY = e.clientY - rect.top;
+
+      // Convert to data coordinates
+      const dataPoint = canvasToData(canvasX, canvasY);
+
+      console.log("Mouse up at canvas:", canvasX, canvasY, "data:", dataPoint);
+      setDebugInfo(
+        `Mouse up at canvas: (${canvasX.toFixed(0)}, ${canvasY.toFixed(
+          0
+        )}), data: (${dataPoint.x}, ${dataPoint.y.toFixed(2)})`
+      );
+
+      // Save drawing
+      if (currentTool === "line") {
+        drawings.current.push({
+          type: "line",
+          points: [startPoint.current, dataPoint],
+          color: "#FFCC00",
+          width: 2,
+        });
+        console.log(
+          "Line saved:",
+          drawings.current[drawings.current.length - 1]
+        );
+      } else if (currentTool === "pencil" && tempPoints.current.length > 1) {
+        drawings.current.push({
+          type: "pencil",
+          points: [...tempPoints.current],
+          color: "#FFCC00",
+          width: 2,
+        });
+        console.log(
+          "Pencil drawing saved with",
+          tempPoints.current.length,
+          "points"
+        );
+      }
+
+      // Reset state
+      isDrawing.current = false;
+      startPoint.current = null;
+      tempPoints.current = [];
+
+      // Redraw canvas
+      redrawCanvas();
+
+      // Prevent default
+      e.preventDefault();
+    };
+
+    // Add wheel event listener to prevent interference with chart zooming
+    const handleWheel = (e: WheelEvent) => {
+      if (currentTool !== "cursor") {
+        // Don't prevent default - let the event bubble to the chart
+        // This allows zooming with the wheel even when a drawing tool is selected
+      }
+    };
+
+    canvas.addEventListener("wheel", handleWheel, { passive: true });
+
+    // Add event listeners directly to the canvas
+    handleMouseDownRef.current = handleMouseDown;
+    handleMouseMoveRef.current = handleMouseMove;
+    handleMouseUpRef.current = handleMouseUp;
+
+    if (currentTool && currentTool !== "cursor") {
+      canvas.addEventListener("mousedown", handleMouseDown);
+      document.addEventListener("mousemove", handleMouseMove); // Keep this on document for better tracking
+      document.addEventListener("mouseup", handleMouseUp); // Keep this on document for better tracking
+    }
+
+    return () => {
+      canvas.removeEventListener("mousedown", handleMouseDownRef.current);
+      document.removeEventListener("mousemove", handleMouseMoveRef.current);
+      document.removeEventListener("mouseup", handleMouseUpRef.current);
+      canvas.removeEventListener("wheel", handleWheel);
+    };
+  }, [currentTool]);
+
+  const clearCanvas = () => {
+    drawings.current = [];
+    redrawCanvas();
+    // setDebugInfo("Canvas cleared");
+  };
+
+  const handlePlotZoom = (eventData: any) => {
+    console.log("Plot zoom");
+
+    // Force autorange after zoom if the range looks unreasonable
+    if (plotRef.current && plotRef.current.el) {
+      const layout = plotRef.current.el._fullLayout;
+      const yaxis = layout.yaxis;
+
+      // Check if the y-range has gone to unreasonable values
+      if (yaxis.range && (yaxis.range[0] < -100 || yaxis.range[1] > 1000)) {
+        // Reset to autorange
+        const update = {
+          "yaxis.autorange": true,
+        };
+
+        // Update the plot with a small delay
+        setTimeout(() => {
+          if (plotRef.current && plotRef.current.el) {
+            plotRef.current.el.relayout(update);
+          }
+        }, 100);
+      }
+    }
+
+    // Sync canvas after zoom
+    requestAnimationFrame(() => {
+      syncCanvasWithPlot();
+    });
+  };
+
   return (
     <Card className={`w-full ${darkMode ? "dark bg-gray-900 text-white" : ""}`}>
       <CardHeader className="p-0">
@@ -530,6 +1082,36 @@ export default function CandlestickChart({
           configureIndicator={configureIndicator}
           onConfigureIndicator={setConfigureIndicator}
         />
+
+        <DrawingToolbar2
+          currentTool={currentTool}
+          setCurrentTool={(tool) => {
+            // Store the previous tool
+            const prevTool = currentTool;
+
+            // Update the current tool
+            setCurrentTool(tool);
+            setDebugInfo(`Tool changed to: ${tool}`);
+
+            // If we're switching between cursor and drawing mode, force a relayout
+            if (
+              (prevTool === "cursor" && tool !== "cursor") ||
+              (prevTool !== "cursor" && tool === "cursor")
+            ) {
+              // Add a small delay to allow the chart to update
+              setTimeout(() => {
+                // Force a redraw of the canvas
+                if (plotRef.current && plotRef.current.el) {
+                  syncCanvasWithPlot();
+                }
+              }, 50);
+            } else {
+              // Just sync the canvas
+              syncCanvasWithPlot();
+            }
+          }}
+          clearCanvas={clearCanvas}
+        />
       </CardHeader>
       <CardContent className="p-0 relative">
         <div className="p-2 border-b">
@@ -537,6 +1119,7 @@ export default function CandlestickChart({
             {symbol} - {mockStocks.find((s) => s.symbol === symbol)?.name}
           </h2>
         </div>
+
         <div
           className={`w-full h-[${height}px] relative border-b`}
           ref={chartRef}
@@ -610,10 +1193,21 @@ export default function CandlestickChart({
                     width: "100%",
                     height: "100%",
                   }}
+                  // onInitialized={handlePlotInitialized}
+                  // onRelayout={handlePlotRelayout}
+                  // onResize={handlePlotResize}
+                  // onAfterPlot={syncCanvasWithPlot}
+                  // onUpdate={handlePlotZoom}
+                  // useResizeHandler
+                  onInitialized={handlePlotInitialized}
+                  onRelayout={handlePlotRelayout}
+                  onResize={handlePlotResize}
+                  onAfterPlot={syncCanvasWithPlot}
+                  onUpdate={handlePlotZoom}
                   useResizeHandler
                   onClick={handleClick}
                   // onClick={() => console.log("click")}
-                  onMouseMove={handleMouseMove}
+                  // onMouseMove={handleMouseMove}
                   onRightClick={(event) => {
                     event.preventDefault();
                     handlePlotEvent(event);
@@ -654,6 +1248,14 @@ export default function CandlestickChart({
                     );
                   })}
                 </div>
+                <canvas
+                  ref={canvasRef}
+                  className="absolute top-0 left-0 z-10"
+                  style={{
+                    pointerEvents: currentTool === "cursor" ? "none" : "all",
+                    cursor: currentTool === "cursor" ? "default" : "crosshair",
+                  }}
+                />
               </OrderContextMenu>
             </>
           )}
